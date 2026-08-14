@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Paella Pi - Paella Master</title>
+  <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #fdf8ed; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #333; }
+    #app-container { position: relative; width: 100vw; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(180deg, #fceabb 0%, #f8b500 100%); }
+    .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 24px 16px; z-index: 10; background: rgba(253, 248, 237, 0.96); backdrop-filter: blur(8px); transition: opacity 0.3s ease; }
+    .hidden { display: none !important; }
+    h1 { font-size: 2.2rem; color: #d32f2f; text-shadow: 1px 2px 0px #fff; text-align: center; margin-top: 10px; }
+    h2 { font-size: 1.4rem; color: #e65100; margin-bottom: 8px; }
+    p { font-size: 0.95rem; color: #5d4037; text-align: center; line-height: 1.4; }
+    .card { width: 100%; max-width: 380px; background: #ffffff; border-radius: 16px; padding: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); border: 2px solid #ffe0b2; margin-bottom: 12px; }
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; text-align: center; }
+    .stat-box { background: #fff8e1; padding: 10px; border-radius: 12px; border: 1px solid #ffecb3; }
+    .stat-box .val { font-size: 1.3rem; font-weight: bold; color: #d84315; }
+    .stat-box .lbl { font-size: 0.75rem; color: #8d6e63; text-transform: uppercase; margin-top: 2px; }
+    .quest-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #ffe0b2; font-size: 0.85rem; }
+    .quest-item:last-child { border-bottom: none; }
+    .quest-badge { font-size: 0.75rem; padding: 3px 8px; border-radius: 10px; font-weight: bold; }
+    .quest-badge.done { background: #c8e6c9; color: #2e7d32; }
+    .quest-badge.pending { background: #ffe0b2; color: #e65100; }
+    .btn { width: 100%; max-width: 380px; padding: 16px; border: none; border-radius: 50px; font-size: 1.1rem; font-weight: bold; color: #fff; background: linear-gradient(135deg, #e65100 0%, #f57c00 100%); box-shadow: 0 6px 18px rgba(230, 81, 0, 0.35); cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .btn:active { transform: scale(0.97); box-shadow: 0 3px 10px rgba(230, 81, 0, 0.2); }
+    .btn-secondary { background: #757575; box-shadow: none; margin-top: 8px; }
+    .btn-login { background: #388e3c; box-shadow: 0 4px 12px rgba(56, 142, 60, 0.3); margin-bottom: 8px; }
+    #game-canvas { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1; display: block; }
+    #hud { position: absolute; top: 12px; left: 12px; right: 12px; z-index: 5; display: flex; justify-content: space-between; align-items: center; pointer-events: none; }
+    .hud-pill { background: rgba(255, 255, 255, 0.92); padding: 8px 16px; border-radius: 30px; font-weight: bold; font-size: 1rem; color: #3e2723; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 6px; }
+    #hud-quest-tracker { position: absolute; top: 60px; left: 50%; transform: translateX(-50%); background: rgba(255, 248, 225, 0.95); border: 1px solid #ffe0b2; padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; color: #e65100; font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,0.1); z-index: 5; pointer-events: none; text-align: center; max-width: 90%; }
+    .notice { font-size: 0.75rem; color: #795548; text-align: center; margin-top: 6px; }
+  </style>
+</head>
+<body>
+  <div id="app-container">
+    <canvas id="game-canvas"></canvas>
+    <div id="hud" class="hidden">
+      <div class="hud-pill">🥘 <span id="hud-score">0</span></div>
+      <div class="hud-pill">⏱️ <span id="hud-timer">60</span>s</div>
+    </div>
+    <div id="hud-quest-tracker" class="hidden">Misión: Atrapa 10 Garrofós</div>
+
+    <div id="screen-home" class="screen">
+      <div>
+        <h1>Paella Pi 🥘</h1>
+        <p style="margin-top: 4px;">Cocina, sube de nivel y consigue tu Airdrop de $PAELLA</p>
+      </div>
+
+      <div class="card">
+        <h2>👨‍🍳 Perfil de Cocina</h2>
+        <p id="user-display" style="font-weight: bold; margin-bottom: 8px; color: #d32f2f;">Iniciando sesión...</p>
+        <div class="stats-grid">
+          <div class="stat-box"><div class="val" id="prof-rank">Principiante</div><div class="lbl">Rango Chef</div></div>
+          <div class="stat-box"><div class="val" id="prof-score">0</div><div class="lbl">Puntos Totales</div></div>
+          <div class="stat-box"><div class="val" id="prof-best">0</div><div class="lbl">Récord</div></div>
+          <div class="stat-box"><div class="val" id="prof-games">0</div><div class="lbl">Partidas</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>📅 Misiones Diarias</h2>
+        <div id="quest-list-container"></div>
+      </div>
+
+      <div style="width: 100%; max-width: 380px;">
+        <button id="btn-login" class="btn btn-login"><span>Sign in with Pi</span></button>
+        <button id="btn-start" class="btn">
+          <span>Empezar Partida</span>
+          <span style="background: rgba(0,0,0,0.2); padding: 4px 10px; border-radius: 20px; font-size: 0.85rem;">0.01 Pi</span>
+        </button>
+        <div class="notice">Pago de 0.01 Pi por sesión a la wallet GCBYE...AOIB2</div>
+      </div>
+    </div>
+
+    <div id="screen-results" class="screen hidden">
+      <div>
+        <h1>¡Partida Finalizada!</h1>
+        <p id="res-subtitle">¡Buena cocinado!</p>
+      </div>
+
+      <div class="card">
+        <h2>📊 Resultados</h2>
+        <div class="stats-grid">
+          <div class="stat-box"><div class="val" id="res-score">0</div><div class="lbl">Puntos</div></div>
+          <div class="stat-box"><div class="val" id="res-quests">+0</div><div class="lbl">Bonus Misión</div></div>
+        </div>
+        <div style="margin-top: 14px; text-align: center;" id="res-rank-container">
+          <p style="font-size: 0.85rem;">Rango Actual:</p>
+          <p style="font-size: 1.3rem; font-weight: bold; color: #e65100;" id="res-rank">Paella Master</p>
+        </div>
+      </div>
+
+      <div style="width: 100%; max-width: 380px;">
+        <button id="btn-play-again" class="btn">
+          <span>Jugar Otra Vez</span>
+          <span style="background: rgba(0,0,0,0.2); padding: 4px 10px; border-radius: 20px; font-size: 0.85rem;">0.01 Pi</span>
+        </button>
+        <button id="btn-home" class="btn btn-secondary">Volver a la Cocina</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const PAYEE_WALLET = "GCBYEUMHOBWEHFC3XYZ5F6AK4TDMMVQA73D2FESCODJRA45CB43AOIB2";
+    const SESSION_COST = 0.01;
+    const GAME_DURATION = 60;
+
+    const RANKS = [
+      { name: "Principiante", minPoints: 0 },
+      { name: "Cocinero Casero", minPoints: 300 },
+      { name: "Promesa del Arroz", minPoints: 800 },
+      { name: "Sous Chef", minPoints: 1800 },
+      { name: "Chef Profesional", minPoints: 3500 },
+      { name: "Paella Master", minPoints: 6000 }
+    ];
+
+    const INGREDIENT_TYPES = {
+      CHICKEN: { name: "Pollo", points: 20, color: "#f4a261", radius: 18, type: "good" },
+      RABBIT: { name: "Conejo", points: 25, color: "#e76f51", radius: 16, type: "good" },
+      GREEN_BEAN: { name: "Bajoqueta", points: 15, color: "#2a9d8f", radius: 14, type: "good" },
+      GARROFO: { name: "Garrofó", points: 30, color: "#e9c46a", radius: 15, type: "good" },
+      RICE: { name: "Arroz", points: 10, color: "#ffffff", radius: 12, type: "good" },
+      KETCHUP: { name: "Ketchup", points: -25, color: "#d62828", radius: 16, type: "bad" },
+      NOODLES: { name: "Fideos", points: -20, color: "#fcbf49", radius: 15, type: "bad" },
+      CHORIZO: { name: "Chorizo", points: 0, color: "#800000", radius: 22, type: "chorizo" }
+    };
+
+    let userData = {
+      totalPoints: 0, bestRun: 0, sessionsPlayed: 0, lastQuestReset: "",
+      quests: [
+        { id: 1, desc: "Atrapa 10 Garrofós", target: 10, progress: 0, reward: 100, completed: false, key: "GARROFO" },
+        { id: 2, desc: "Suma 300 pts en una partida", target: 300, progress: 0, reward: 150, completed: false, key: "SCORE" },
+        { id: 3, desc: "Evita todo el Chorizo", target: 1, progress: 0, reward: 120, completed: false, key: "NO_CHORIZO" }
+      ]
+    };
+
+    let piUser = null;
+
+    function onIncompletePaymentFound(payment) { console.log("Incomplete payment found:", payment); }
+
+    async function authenticateWithPi() {
+      const userDisplay = document.getElementById('user-display');
+      userDisplay.innerText = "Connecting to Pi Network...";
+      try {
+        if (!window.Pi) {
+          userDisplay.innerText = "Pi SDK non-existent (Offline/Browser)";
+          loadUserData();
+          return;
+        }
+        await Pi.init({ version: "2.0", sandbox: true });
+        const auth = await Pi.authenticate(['username'], onIncompletePaymentFound);
+        const res = await fetch('/api/authenticate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ accessToken: auth.accessToken })
+        });
+        if (!res.ok) throw new Error('Backend token verification failed');
+        const data = await res.json();
+        piUser = data.user;
+        userDisplay.innerText = `Chef: ${piUser.username}`;
+        loadUserData();
+      } catch (err) {
+        console.error("Pi Authentication failed:", err);
+        userDisplay.innerText = "Authentication Failed";
+        loadUserData();
+      }
+    }
+
+    function requestPiPayment(onSuccess, onError) {
+      if (!window.Pi || !piUser) { setTimeout(onSuccess, 500); return; }
+      const paymentData = { amount: SESSION_COST, memo: "Pago de Partida Paella Pi", metadata: { type: "game_session" } };
+      const callbacks = {
+        onReadyForServerApproval: function(paymentId) {
+          fetch('/api/approve-payment', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ paymentId }) });
+        },
+        onReadyForServerCompletion: function(paymentId, txid) {
+          fetch('/api/complete-payment', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ paymentId, txid }) }).then(() => onSuccess());
+        },
+        onCancel: function() { alert("Pago cancelado."); if (onError) onError(); },
+        onError: function(error) { alert("Error de pago: " + error.message); if (onError) onError(); }
+      };
+      Pi.createPayment(paymentData, callbacks);
+    }
+
+    function loadUserData() {
+      const storageKey = piUser ? `paella_pi_${piUser.uid}` : 'paella_pi_local';
+      const saved = localStorage.getItem(storageKey);
+      if (saved) { try { userData = JSON.parse(saved); } catch(e){} }
+      checkDailyReset(); updateDashboardUI();
+    }
+
+    function saveUserData() {
+      const storageKey = piUser ? `paella_pi_${piUser.uid}` : 'paella_pi_local';
+      localStorage.setItem(storageKey, JSON.stringify(userData));
+      updateDashboardUI();
+    }
+
+    function checkDailyReset() {
+      const today = new Date().toISOString().split('T')[0];
+      if (userData.lastQuestReset !== today) {
+        userData.lastQuestReset = today;
+        userData.quests = [
+          { id: 1, desc: "Atrapa 10 Garrofós", target: 10, progress: 0, reward: 100, completed: false, key: "GARROFO" },
+          { id: 2, desc: "Suma 300 pts en una partida", target: 300, progress: 0, reward: 150, completed: false, key: "SCORE" },
+          { id: 3, desc: "Evita todo el Chorizo", target: 1, progress: 0, reward: 120, completed: false, key: "NO_CHORIZO" }
+        ];
+      }
+    }
+
+    function getRank(points) {
+      let current = RANKS[0].name;
+      for (let r of RANKS) { if (points >= r.minPoints) current = r.name; }
+      return current;
+    }
+
+    function updateDashboardUI() {
+      document.getElementById('prof-rank').innerText = getRank(userData.totalPoints);
+      document.getElementById('prof-score').innerText = userData.totalPoints;
+      document.getElementById('prof-best').innerText = userData.bestRun;
+      document.getElementById('prof-games').innerText = userData.sessionsPlayed;
+      const qContainer = document.getElementById('quest-list-container');
+      qContainer.innerHTML = '';
+      userData.quests.forEach(q => {
+        const div = document.createElement('div');
+        div.className = 'quest-item';
+        div.innerHTML = `<div><div style="font-weight:600; color:#3e2723;">${q.desc}</div><div style="font-size:0.75rem; color:#8d6e63;">Progreso: ${q.progress}/${q.target} (+${q.reward} pts)</div></div><span class="quest-badge ${q.completed ? 'done' : 'pending'}">${q.completed ? 'HECHO' : 'ACTIVA'}</span>`;
+        qContainer.appendChild(div);
+      });
+    }
+
+    class SoundFx {
+      constructor() { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); }
+      playCatchGood() {
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+        const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
+        osc.type = 'sine'; osc.frequency.setValueAtTime(440, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(880, this.ctx.currentTime + 0.15);
+        gain.gain.setValueAtTime(0.3, this.ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
+        osc.connect(gain); gain.connect(this.ctx.destination); osc.start(); osc.stop(this.ctx.currentTime + 0.15);
+      }
+      playCatchBad() {
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+        const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
+        osc.type = 'sawtooth'; osc.frequency.setValueAtTime(220, this.ctx.currentTime);
+        osc.frequency.linearRampToValueAtTime(110, this.ctx.currentTime + 0.2);
+        gain.gain.setValueAtTime(0.3, this.ctx.currentTime); gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.2);
+        osc.connect(gain); gain.connect(this.ctx.destination); osc.start(); osc.stop(this.ctx.currentTime + 0.2);
+      }
+      playChorizoPenalty() {
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+        const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
+        osc.type = 'square'; osc.frequency.setValueAtTime(150, this.ctx.currentTime);
+        osc.frequency.setValueAtTime(100, this.ctx.currentTime + 0.1); osc.frequency.setValueAtTime(70, this.ctx.currentTime + 0.2);
+        gain.gain.setValueAtTime(0.4, this.ctx.currentTime); gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.35);
+        osc.connect(gain); gain.connect(this.ctx.destination); osc.start(); osc.stop(this.ctx.currentTime + 0.35);
+      }
+    }
+    const audio = new SoundFx();
+
+    const canvas = document.getElementById('game-canvas');
+    const ctx = canvas.getContext('2d');
+    let isPlaying = false, score = 0, timeRemaining = GAME_DURATION, gameTimer = null, items = [], particles = [];
+    const pan = { x: 0, y: 0, width: 140, height: 45, targetX: 0 };
+    let sessionMetrics = { garrofoCount: 0, chorizoCaught: 0 };
+
+    function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; pan.y = canvas.height - 90; if (!isPlaying) pan.x = canvas.width / 2; }
+    window.addEventListener('resize', resizeCanvas); resizeCanvas();
+
+    function handleTouchMove(e) { if (!isPlaying) return; const touchX = e.touches ? e.touches[0].clientX : e.clientX; pan.targetX = touchX; }
+    window.addEventListener('mousemove', handleTouchMove); window.addEventListener('touchmove', handleTouchMove, { passive: true });
+
+    function startGameSession() {
+      requestPiPayment(() => {
+        document.getElementById('screen-home').classList.add('hidden');
+        document.getElementById('screen-results').classList.add('hidden');
+        document.getElementById('hud').classList.remove('hidden');
+        document.getElementById('hud-quest-tracker').classList.remove('hidden');
+        score = 0; timeRemaining = GAME_DURATION; items = []; particles = []; sessionMetrics = { garrofoCount: 0, chorizoCaught: 0 };
+        document.getElementById('hud-score').innerText = '0'; document.getElementById('hud-timer').innerText = GAME_DURATION;
+        isPlaying = true; pan.x = canvas.width / 2; pan.targetX = canvas.width / 2;
+        if (gameTimer) clearInterval(gameTimer);
+        gameTimer = setInterval(() => { timeRemaining--; document.getElementById('hud-timer').innerText = timeRemaining; if (timeRemaining <= 0) endGameSession(); }, 1000);
+        requestAnimationFrame(gameLoop);
+      });
+    }
+
+    function spawnItem() {
+      let rand = Math.random(), selectedKey = "RICE";
+      if (rand < 0.12) selectedKey = "CHORIZO";
+      else if (rand < 0.28) selectedKey = "KETCHUP";
+      else if (rand < 0.40) selectedKey = "NOODLES";
+      else if (rand < 0.55) selectedKey = "GARROFO";
+      else if (rand < 0.70) selectedKey = "GREEN_BEAN";
+      else if (rand < 0.85) selectedKey = "CHICKEN";
+      else selectedKey = "RABBIT";
+      const typeData = INGREDIENT_TYPES[selectedKey];
+      items.push({ x: Math.random() * (canvas.width - 60) + 30, y: -30, speed: Math.random() * 2.5 + 3.5, key: selectedKey, ...typeData });
+    }
+
+    function createParticles(x, y, color) {
+      for (let i = 0; i < 10; i++) {
+        particles.push({ x: x, y: y, vx: (Math.random() - 0.5) * 6, vy: (Math.random() - 0.5) * 6, radius: Math.random() * 4 + 2, color: color, alpha: 1 });
+      }
+    }
+
+    let spawnCounter = 0;
+    function gameLoop() {
+      if (!isPlaying) return;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      pan.x += (pan.targetX - pan.x) * 0.25;
+      if (pan.x < pan.width / 2) pan.x = pan.width / 2;
+      if (pan.x > canvas.width - pan.width / 2) pan.x = canvas.width - pan.width / 2;
+
+      ctx.beginPath(); ctx.ellipse(pan.x, pan.y + 20, pan.width / 2, 12, 0, 0, Math.PI * 2); ctx.fillStyle = 'rgba(0,0,0,0.18)'; ctx.fill();
+      ctx.fillStyle = '#263238'; ctx.fillRect(pan.x - pan.width / 2 - 15, pan.y - 4, 15, 8); ctx.fillRect(pan.x + pan.width / 2, pan.y - 4, 15, 8);
+      ctx.beginPath(); ctx.ellipse(pan.x, pan.y, pan.width / 2, pan.height / 2, 0, 0, Math.PI * 2); ctx.fillStyle = '#ffb300'; ctx.fill(); ctx.lineWidth = 4; ctx.strokeStyle = '#e65100'; ctx.stroke();
+      ctx.beginPath(); ctx.ellipse(pan.x, pan.y + 4, pan.width / 2 - 8, pan.height / 2 - 6, 0, 0, Math.PI * 2); ctx.fillStyle = '#ffe082'; ctx.fill();
+
+      spawnCounter++; if (spawnCounter % 32 === 0) spawnItem();
+
+      for (let i = items.length - 1; i >= 0; i--) {
+        let item = items[i]; item.y += item.speed;
+        ctx.beginPath(); ctx.arc(item.x, item.y, item.radius, 0, Math.PI * 2); ctx.fillStyle = item.color; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = '#333'; ctx.stroke();
+        const inX = item.x > pan.x - pan.width / 2 && item.x < pan.x + pan.width / 2;
+        const inY = item.y + item.radius >= pan.y - pan.height / 4 && item.y - item.radius <= pan.y + pan.height / 2;
+        if (inX && inY) {
+          if (item.type === 'good') { score += item.points; audio.playCatchGood(); createParticles(item.x, item.y, item.color); if (item.key === 'GARROFO') sessionMetrics.garrofoCount++; }
+          else if (item.type === 'bad') { score = Math.max(0, score + item.points); audio.playCatchBad(); createParticles(item.x, item.y, '#d62828'); }
+          else if (item.type === 'chorizo') { score = Math.floor(score * 0.5); sessionMetrics.chorizoCaught++; audio.playChorizoPenalty(); createParticles(item.x, item.y, '#800000'); }
+          document.getElementById('hud-score').innerText = score; items.splice(i, 1); continue;
+        }
+        if (item.y > canvas.height + 40) items.splice(i, 1);
+      }
+
+      for (let i = particles.length - 1; i >= 0; i--) {
+        let p = particles[i]; p.x += p.vx; p.y += p.vy; p.alpha -= 0.03;
+        if (p.alpha <= 0) { particles.splice(i, 1); continue; }
+        ctx.save(); ctx.globalAlpha = p.alpha; ctx.beginPath(); ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2); ctx.fillStyle = p.color; ctx.fill(); ctx.restore();
+      }
+      requestAnimationFrame(gameLoop);
+    }
+
+    function endGameSession() {
+      isPlaying = false; clearInterval(gameTimer);
+      document.getElementById('hud').classList.add('hidden'); document.getElementById('hud-quest-tracker').classList.add('hidden');
+      let questBonusTotal = 0;
+      userData.quests.forEach(q => {
+        if (!q.completed) {
+          if (q.key === 'GARROFO') { q.progress += sessionMetrics.garrofoCount; if (q.progress >= q.target) { q.progress = q.target; q.completed = true; questBonusTotal += q.reward; } }
+          else if (q.key === 'SCORE') { if (score >= q.target) { q.progress = q.target; q.completed = true; questBonusTotal += q.reward; } else { q.progress = Math.max(q.progress, score); } }
+          else if (q.key === 'NO_CHORIZO') { if (sessionMetrics.chorizoCaught === 0) { q.progress = 1; q.completed = true; questBonusTotal += q.reward; } }
+        }
+      });
+      const sessionFinalPoints = score + questBonusTotal;
+      userData.totalPoints += sessionFinalPoints; userData.sessionsPlayed++;
+      if (score > userData.bestRun) userData.bestRun = score;
+      saveUserData();
+      document.getElementById('res-score').innerText = score;
+      document.getElementById('res-quests').innerText = `+${questBonusTotal}`;
+      document.getElementById('res-rank').innerText = getRank(userData.totalPoints);
+      document.getElementById('screen-results').classList.remove('hidden');
+    }
+
+    document.getElementById('btn-login').addEventListener('click', authenticateWithPi);
+    document.getElementById('btn-start').addEventListener('click', startGameSession);
+    document.getElementById('btn-play-again').addEventListener('click', startGameSession);
+    document.getElementById('btn-home').addEventListener('click', () => {
+      document.getElementById('screen-results').classList.add('hidden');
+      document.getElementById('screen-home').classList.remove('hidden');
+      updateDashboardUI();
+    });
+
+    window.onload = () => { authenticateWithPi(); };
+  </script>
+</body>
+</html>
