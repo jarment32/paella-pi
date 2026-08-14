@@ -10,53 +10,51 @@
     html, body { width: 100%; height: 100%; overflow: hidden; background: #fdf8ed; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #333; }
     #app-container { position: relative; width: 100vw; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #fdf8ed; }
     
-    /* Login Loading Overlay */
+    /* Login Overlay */
     #auth-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #fdf8ed; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.4s ease; }
     .spinner { width: 60px; height: 60px; border: 5px solid #ffe0b2; border-top: 5px solid #e65100; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 24px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     .auth-title { font-size: 1.6rem; font-weight: bold; color: #3e2723; margin-bottom: 6px; }
     .auth-sub { font-size: 0.95rem; color: #8d6e63; }
 
-    .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 24px 16px; z-index: 10; background: rgba(253, 248, 237, 0.96); backdrop-filter: blur(8px); }
+    .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 24px 16px; z-index: 10; background: rgba(253, 248, 237, 0.96); backdrop-filter: blur(8px); overflow-y: auto; }
     .hidden { display: none !important; }
     h1 { font-size: 2.2rem; color: #d32f2f; text-shadow: 1px 2px 0px #fff; text-align: center; margin-top: 5px; }
-    h2 { font-size: 1.3rem; color: #e65100; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+    h2 { font-size: 1.2rem; color: #e65100; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
     p { font-size: 0.95rem; color: #5d4037; text-align: center; line-height: 1.4; }
     
     .card { width: 100%; max-width: 380px; background: #ffffff; border-radius: 16px; padding: 14px 16px; box-shadow: 0 8px 20px rgba(0,0,0,0.06); border: 2px solid #ffe0b2; margin-bottom: 10px; }
     .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; text-align: center; }
     .stat-box { background: #fff8e1; padding: 8px; border-radius: 10px; border: 1px solid #ffecb3; }
-    .stat-box .val { font-size: 1.2rem; font-weight: bold; color: #d84315; }
-    .stat-box .lbl { font-size: 0.7rem; color: #8d6e63; text-transform: uppercase; margin-top: 2px; font-weight: 600; }
+    .stat-box .val { font-size: 1.1rem; font-weight: bold; color: #d84315; }
+    .stat-box .lbl { font-size: 0.68rem; color: #8d6e63; text-transform: uppercase; margin-top: 2px; font-weight: 600; }
     
-    .quest-item { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 1px dashed #ffe0b2; font-size: 0.85rem; }
+    .quest-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #ffe0b2; font-size: 0.85rem; }
     .quest-item:last-child { border-bottom: none; }
     .quest-badge { font-size: 0.7rem; padding: 3px 8px; border-radius: 10px; font-weight: bold; }
     .quest-badge.done { background: #c8e6c9; color: #2e7d32; }
     .quest-badge.pending { background: #ffe0b2; color: #e65100; }
     
-    .btn { width: 100%; max-width: 380px; padding: 15px; border: none; border-radius: 50px; font-size: 1.05rem; font-weight: bold; color: #fff; background: linear-gradient(135deg, #e65100 0%, #f57c00 100%); box-shadow: 0 6px 18px rgba(230, 81, 0, 0.35); cursor: pointer; transition: transform 0.1s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .btn { width: 100%; max-width: 380px; padding: 14px; border: none; border-radius: 50px; font-size: 1.05rem; font-weight: bold; color: #fff; background: linear-gradient(135deg, #e65100 0%, #f57c00 100%); box-shadow: 0 6px 18px rgba(230, 81, 0, 0.35); cursor: pointer; transition: transform 0.1s; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px; }
     .btn:active { transform: scale(0.97); }
-    .btn-secondary { background: #757575; box-shadow: none; margin-top: 6px; }
-    .btn-info { background: #0288d1; box-shadow: 0 4px 12px rgba(2, 136, 209, 0.3); margin-bottom: 8px; }
-    .btn-login { background: #388e3c; box-shadow: 0 4px 12px rgba(56, 142, 60, 0.3); margin-bottom: 8px; }
+    .btn-secondary { background: #757575; box-shadow: none; margin-top: 2px; }
+    .btn-info { background: #0288d1; box-shadow: 0 4px 12px rgba(2, 136, 209, 0.3); }
+    .btn-login { background: #388e3c; box-shadow: 0 4px 12px rgba(56, 142, 60, 0.3); }
     
     #game-canvas { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1; display: block; }
     #hud { position: absolute; top: 12px; left: 12px; right: 12px; z-index: 5; display: flex; justify-content: space-between; align-items: center; pointer-events: none; }
     .hud-pill { background: rgba(255, 255, 255, 0.95); padding: 8px 16px; border-radius: 30px; font-weight: bold; font-size: 1rem; color: #3e2723; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 6px; }
-    #hud-quest-tracker { position: absolute; top: 60px; left: 50%; transform: translateX(-50%); background: rgba(255, 248, 225, 0.95); border: 1px solid #ffe0b2; padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; color: #e65100; font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,0.1); z-index: 5; pointer-events: none; text-align: center; max-width: 90%; }
     
-    /* Modal Tutorial */
     .modal { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 16px; }
     .modal-content { background: #fff; width: 100%; max-width: 400px; border-radius: 20px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
     .modal-content h3 { color: #d32f2f; margin-bottom: 10px; text-align: center; }
     .tutorial-list { text-align: left; font-size: 0.85rem; color: #4e342e; line-height: 1.5; margin-bottom: 16px; }
-    .tutorial-list li { margin-bottom: 8px; list-style-type: none; display: flex; align-items: center; gap: 8px; }
+    .tutorial-list li { margin-bottom: 8px; list-style-type: none; }
   </style>
 </head>
 <body>
 
-  <!-- Pi Loading Screen -->
+  <!-- Pi Loading Overlay -->
   <div id="auth-overlay">
     <div class="spinner"></div>
     <div class="auth-title">Pi Network Authentication</div>
@@ -70,18 +68,17 @@
       <div class="hud-pill">🥘 <span id="hud-score">0</span></div>
       <div class="hud-pill">⏱️ <span id="hud-timer">60</span>s</div>
     </div>
-    <div id="hud-quest-tracker" class="hidden">Quest: Catch 10 Garrofó Beans</div>
 
     <!-- Home Screen -->
     <div id="screen-home" class="screen">
       <div>
         <h1>Paella Pi 🥘</h1>
-        <p style="margin-top: 4px;">Cook, level up and earn your $PAELLA Airdrop</p>
+        <p style="margin-top: 2px;">Cook, level up and earn your $PAELLA Airdrop</p>
       </div>
 
       <div class="card">
         <h2>👨‍🍳 Kitchen Profile</h2>
-        <p id="user-display" style="font-weight: bold; margin-bottom: 8px; color: #d32f2f;">Connecting Pi Account...</p>
+        <p id="user-display" style="font-weight: bold; margin-bottom: 8px; color: #d32f2f;">Not Logged In</p>
         <div class="stats-grid">
           <div class="stat-box"><div class="val" id="prof-rank">Rookie</div><div class="lbl">Chef Rank</div></div>
           <div class="stat-box"><div class="val" id="prof-score">0</div><div class="lbl">Total Points</div></div>
@@ -92,12 +89,14 @@
 
       <div class="card">
         <h2>📅 Daily Quests</h2>
-        <div id="quest-list-container"></div>
+        <div id="quest-list-container">
+          <!-- Renderizado dinámico -->
+        </div>
       </div>
 
       <div style="width: 100%; max-width: 380px;">
         <button id="btn-tutorial" class="btn btn-info"><span>❓ How to Play</span></button>
-        <button id="btn-login" class="btn btn-login hidden"><span>Sign in with Pi</span></button>
+        <button id="btn-login" class="btn btn-login"><span>Sign in with Pi</span></button>
         <button id="btn-start" class="btn">
           <span>Start Match (Airdrop)</span>
           <span style="background: rgba(0,0,0,0.2); padding: 4px 10px; border-radius: 20px; font-size: 0.85rem;">0.01 Pi</span>
@@ -120,7 +119,7 @@
         </div>
         <div style="margin-top: 14px; text-align: center;">
           <p style="font-size: 0.85rem;">Current Rank:</p>
-          <p style="font-size: 1.3rem; font-weight: bold; color: #e65100;" id="res-rank">Paella Master</p>
+          <p style="font-size: 1.3rem; font-weight: bold; color: #e65100;" id="res-rank">Rookie Chef</p>
         </div>
       </div>
 
@@ -139,13 +138,13 @@
     <div class="modal-content">
       <h3>🥘 How to Play</h3>
       <ul class="tutorial-list">
-        <li>👉 <strong>Slide your pan</strong> left and right to catch authentic paella ingredients.</li>
+        <li>👉 <strong>Slide your pan</strong> left and right to catch ingredients.</li>
         <li>🍗 <strong>Good Ingredients:</strong> Rice, Chicken, Rabbit, Green Beans, Garrofó Beans (+10 to +30 pts).</li>
         <li>🚫 <strong>Bad Ingredients:</strong> Ketchup & Noodles (-20 to -25 pts).</li>
         <li>❌ <strong>CHORIZO WARNING:</strong> Catching Chorizo cuts your current score by 50%!</li>
         <li>💎 <strong>0.01 Pi Payment:</strong> Grants game entry and registers your score for the $PAELLA Airdrop.</li>
       </ul>
-      <button id="btn-close-tutorial" class="btn">Got it!</button>
+      <button id="btn-close-tutorial" class="btn" style="margin-bottom:0;">Got it!</button>
     </div>
   </div>
 
@@ -185,21 +184,21 @@
     let piUser = null;
     let isPiInitialized = false;
 
-    async function completeIncompletePayment(payment) {
-      try {
-        await fetch('/api/payments/complete', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ paymentId: payment.identifier, txid: payment.transaction.txid })
-        });
-      } catch (err) {
-        console.error("Error completing payment:", err);
-      }
-    }
-
-    function onIncompletePaymentFound(payment) {
-      if (payment && payment.transaction && payment.transaction.txid) {
-        completeIncompletePayment(payment);
+    // Inicialización directa del SDK de Pi
+    async function initPiSDK() {
+      const overlay = document.getElementById('auth-overlay');
+      if (window.Pi) {
+        try {
+          await Pi.init({ version: "2.0", sandbox: true });
+          isPiInitialized = true;
+          await authenticateWithPi();
+        } catch (err) {
+          console.error("Pi Init Error:", err);
+          overlay.classList.add('hidden');
+        }
+      } else {
+        overlay.classList.add('hidden');
+        document.getElementById('user-display').innerText = "Open inside Pi Browser";
       }
     }
 
@@ -208,28 +207,11 @@
       const userDisplay = document.getElementById('user-display');
       
       try {
-        if (!window.Pi) {
-          overlay.classList.add('hidden');
-          userDisplay.innerText = "Pi SDK Not Found";
-          return;
-        }
-
-        if (!isPiInitialized) {
-          await Pi.init({ version: "2.0", sandbox: true });
-          isPiInitialized = true;
-        }
-
-        const auth = await Pi.authenticate(['username', 'payments'], onIncompletePaymentFound);
-        const res = await fetch('/api/authenticate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ accessToken: auth.accessToken })
+        const auth = await Pi.authenticate(['username', 'payments'], function(payment) {
+          console.log("Incomplete payment found", payment);
         });
-
-        if (!res.ok) throw new Error('Token verification failed');
-        const data = await res.json();
-        piUser = data.user;
         
+        piUser = auth.user;
         userDisplay.innerText = `Chef: ${piUser.username}`;
         document.getElementById('btn-login').classList.add('hidden');
         overlay.classList.add('hidden');
@@ -250,32 +232,24 @@
 
       const paymentData = {
         amount: SESSION_COST,
-        memo: "Paella Pi Match Entry + $PAELLA Airdrop",
+        memo: "Paella Pi Match Entry",
         metadata: { type: "game_entry" }
       };
 
       const callbacks = {
         onReadyForServerApproval: function(paymentId) {
-          fetch('/api/payments/approve', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ paymentId })
-          });
+          // En modo 100% frontend estático se puede simular el flujo o enviar a tu endpoint personal
+          console.log("Payment Ready For Approval:", paymentId);
         },
         onReadyForServerCompletion: function(paymentId, txid) {
-          fetch('/api/payments/complete', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ paymentId, txid })
-          }).then(() => {
-            onSuccess();
-          });
+          console.log("Payment Completed:", paymentId, txid);
+          onSuccess();
         },
         onCancel: function(paymentId) {
-          alert("Payment canceled. You must pay 0.01 Pi to start the match.");
+          alert("Payment canceled. 0.01 Pi payment is required to play.");
         },
         onError: function(error) {
-          alert("Payment failed: " + error.message);
+          alert("Payment error: " + error.message);
         }
       };
 
@@ -283,21 +257,24 @@
     }
 
     function loadUserData() {
-      const storageKey = piUser ? `paella_pi_${piUser.uid}` : 'paella_pi_local';
+      const storageKey = piUser ? `paella_pi_${piUser.uid}` : 'paella_pi_guest';
       const saved = localStorage.getItem(storageKey);
-      if (saved) { try { userData = JSON.parse(saved); } catch(e){} }
-      checkDailyReset(); updateDashboardUI();
+      if (saved) { 
+        try { userData = JSON.parse(saved); } catch(e){} 
+      }
+      checkDailyReset(); 
+      updateDashboardUI();
     }
 
     function saveUserData() {
-      const storageKey = piUser ? `paella_pi_${piUser.uid}` : 'paella_pi_local';
+      const storageKey = piUser ? `paella_pi_${piUser.uid}` : 'paella_pi_guest';
       localStorage.setItem(storageKey, JSON.stringify(userData));
       updateDashboardUI();
     }
 
     function checkDailyReset() {
       const today = new Date().toISOString().split('T')[0];
-      if (userData.lastQuestReset !== today) {
+      if (userData.lastQuestReset !== today || !userData.quests) {
         userData.lastQuestReset = today;
         userData.quests = [
           { id: 1, desc: "Catch 10 Garrofó Beans", target: 10, progress: 0, reward: 100, completed: false, key: "GARROFO" },
@@ -318,19 +295,30 @@
       document.getElementById('prof-score').innerText = userData.totalPoints;
       document.getElementById('prof-best').innerText = userData.bestRun;
       document.getElementById('prof-games').innerText = userData.sessionsPlayed;
+      
       const qContainer = document.getElementById('quest-list-container');
       qContainer.innerHTML = '';
-      userData.quests.forEach(q => {
-        const div = document.createElement('div');
-        div.className = 'quest-item';
-        div.innerHTML = `<div><div style="font-weight:600; color:#3e2723;">${q.desc}</div><div style="font-size:0.75rem; color:#8d6e63;">Progress: ${q.progress}/${q.target} (+${q.reward} pts)</div></div><span class="quest-badge ${q.completed ? 'done' : 'pending'}">${q.completed ? 'DONE' : 'ACTIVE'}</span>`;
-        qContainer.appendChild(div);
-      });
+      
+      if (userData.quests && userData.quests.length > 0) {
+        userData.quests.forEach(q => {
+          const div = document.createElement('div');
+          div.className = 'quest-item';
+          div.innerHTML = `
+            <div>
+              <div style="font-weight:600; color:#3e2723;">${q.desc}</div>
+              <div style="font-size:0.75rem; color:#8d6e63;">Progress: ${q.progress}/${q.target} (+${q.reward} pts)</div>
+            </div>
+            <span class="quest-badge ${q.completed ? 'done' : 'pending'}">${q.completed ? 'DONE' : 'ACTIVE'}</span>
+          `;
+          qContainer.appendChild(div);
+        });
+      }
     }
 
+    // Lógica del Canvas y Juego
     const canvas = document.getElementById('game-canvas');
     const ctx = canvas.getContext('2d');
-    let isPlaying = false, score = 0, timeRemaining = GAME_DURATION, gameTimer = null, items = [], particles = [];
+    let isPlaying = false, score = 0, timeRemaining = GAME_DURATION, gameTimer = null, items = [];
     const pan = { x: 0, y: 0, width: 140, height: 45, targetX: 0 };
     let sessionMetrics = { garrofoCount: 0, chorizoCaught: 0 };
 
@@ -345,8 +333,7 @@
         document.getElementById('screen-home').classList.add('hidden');
         document.getElementById('screen-results').classList.add('hidden');
         document.getElementById('hud').classList.remove('hidden');
-        document.getElementById('hud-quest-tracker').classList.remove('hidden');
-        score = 0; timeRemaining = GAME_DURATION; items = []; particles = []; sessionMetrics = { garrofoCount: 0, chorizoCaught: 0 };
+        score = 0; timeRemaining = GAME_DURATION; items = []; sessionMetrics = { garrofoCount: 0, chorizoCaught: 0 };
         document.getElementById('hud-score').innerText = '0'; document.getElementById('hud-timer').innerText = GAME_DURATION;
         isPlaying = true; pan.x = canvas.width / 2; pan.targetX = canvas.width / 2;
         if (gameTimer) clearInterval(gameTimer);
@@ -371,58 +358,30 @@
     function drawIngredient(item) {
       ctx.save();
       ctx.translate(item.x, item.y);
-      
       if (item.key === 'CHICKEN' || item.key === 'RABBIT') {
-        ctx.fillStyle = item.color;
-        ctx.beginPath();
-        ctx.arc(0, 0, item.radius, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = '#fff';
-        ctx.fillRect(-item.radius, -3, 8, 6);
+        ctx.fillStyle = item.color; ctx.beginPath(); ctx.arc(0, 0, item.radius, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#fff'; ctx.fillRect(-item.radius, -3, 8, 6);
       } else if (item.key === 'GREEN_BEAN') {
-        ctx.fillStyle = item.color;
-        ctx.beginPath();
-        ctx.roundRect(-item.radius, -5, item.radius * 2, 10, 5);
-        ctx.fill();
+        ctx.fillStyle = item.color; ctx.beginPath(); ctx.roundRect(-item.radius, -5, item.radius * 2, 10, 5); ctx.fill();
       } else if (item.key === 'GARROFO') {
-        ctx.fillStyle = item.color;
-        ctx.beginPath();
-        ctx.ellipse(0, 0, item.radius, item.radius - 5, Math.PI / 4, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.fillStyle = item.color; ctx.beginPath(); ctx.ellipse(0, 0, item.radius, item.radius - 5, Math.PI / 4, 0, Math.PI * 2); ctx.fill();
       } else if (item.key === 'RICE') {
-        ctx.fillStyle = '#ffffff';
-        ctx.beginPath();
-        ctx.ellipse(0, 0, item.radius, 6, 0, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.ellipse(0, 0, item.radius, 6, 0, 0, Math.PI * 2); ctx.fill();
       } else if (item.key === 'CHORIZO') {
-        ctx.fillStyle = item.color;
-        ctx.beginPath();
-        ctx.arc(0, 0, item.radius, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = '#ff1744'; ctx.lineWidth = 3;
-        ctx.beginPath(); ctx.moveTo(-10, -10); ctx.lineTo(10, 10); ctx.moveTo(10, -10); ctx.lineTo(-10, 10); ctx.stroke();
+        ctx.fillStyle = item.color; ctx.beginPath(); ctx.arc(0, 0, item.radius, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = '#ff1744'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(-10, -10); ctx.lineTo(10, 10); ctx.moveTo(10, -10); ctx.lineTo(-10, 10); ctx.stroke();
       } else {
-        ctx.fillStyle = item.color;
-        ctx.beginPath(); ctx.arc(0, 0, item.radius, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = item.color; ctx.beginPath(); ctx.arc(0, 0, item.radius, 0, Math.PI * 2); ctx.fill();
       }
       ctx.restore();
     }
 
     function drawBackground() {
-      // Kitchen background
       let grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
-      grad.addColorStop(0, '#fff3e0');
-      grad.addColorStop(0.7, '#ffe0b2');
-      grad.addColorStop(1, '#ffcc80');
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      // Tile texture lines
-      ctx.strokeStyle = 'rgba(230, 81, 0, 0.05)';
-      ctx.lineWidth = 2;
-      for (let y = 0; y < canvas.height; y += 40) {
-        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
-      }
+      grad.addColorStop(0, '#fff3e0'); grad.addColorStop(0.7, '#ffe0b2'); grad.addColorStop(1, '#ffcc80');
+      ctx.fillStyle = grad; ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.strokeStyle = 'rgba(230, 81, 0, 0.05)'; ctx.lineWidth = 2;
+      for (let y = 0; y < canvas.height; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke(); }
     }
 
     let spawnCounter = 0;
@@ -434,7 +393,6 @@
       if (pan.x < pan.width / 2) pan.x = pan.width / 2;
       if (pan.x > canvas.width - pan.width / 2) pan.x = canvas.width - pan.width / 2;
 
-      // Draw Pan
       ctx.beginPath(); ctx.ellipse(pan.x, pan.y + 20, pan.width / 2, 12, 0, 0, Math.PI * 2); ctx.fillStyle = 'rgba(0,0,0,0.18)'; ctx.fill();
       ctx.fillStyle = '#263238'; ctx.fillRect(pan.x - pan.width / 2 - 15, pan.y - 4, 15, 8); ctx.fillRect(pan.x + pan.width / 2, pan.y - 4, 15, 8);
       ctx.beginPath(); ctx.ellipse(pan.x, pan.y, pan.width / 2, pan.height / 2, 0, 0, Math.PI * 2); ctx.fillStyle = '#ffb300'; ctx.fill(); ctx.lineWidth = 4; ctx.strokeStyle = '#e65100'; ctx.stroke();
@@ -462,7 +420,7 @@
 
     function endGameSession() {
       isPlaying = false; clearInterval(gameTimer);
-      document.getElementById('hud').classList.add('hidden'); document.getElementById('hud-quest-tracker').classList.add('hidden');
+      document.getElementById('hud').classList.add('hidden');
       let questBonusTotal = 0;
       userData.quests.forEach(q => {
         if (!q.completed) {
@@ -471,8 +429,7 @@
           else if (q.key === 'NO_CHORIZO') { if (sessionMetrics.chorizoCaught === 0) { q.progress = 1; q.completed = true; questBonusTotal += q.reward; } }
         }
       });
-      const sessionFinalPoints = score + questBonusTotal;
-      userData.totalPoints += sessionFinalPoints; userData.sessionsPlayed++;
+      userData.totalPoints += (score + questBonusTotal); userData.sessionsPlayed++;
       if (score > userData.bestRun) userData.bestRun = score;
       saveUserData();
       document.getElementById('res-score').innerText = score;
@@ -493,7 +450,7 @@
     document.getElementById('btn-tutorial').addEventListener('click', () => { document.getElementById('modal-tutorial').classList.remove('hidden'); });
     document.getElementById('btn-close-tutorial').addEventListener('click', () => { document.getElementById('modal-tutorial').classList.add('hidden'); });
 
-    window.onload = () => { authenticateWithPi(); };
+    window.onload = () => { initPiSDK(); };
   </script>
 </body>
 </html>
