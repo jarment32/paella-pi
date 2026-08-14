@@ -1,777 +1,754 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Paella Pi 🥘 | Cook & Earn $PAELLA</title>
-<script src="https://sdk.minepi.com/pi-sdk.js"></script>
-<style>
-  :root{
-    --orange:#e65100;
-    --orange-light:#ff8f3f;
-    --cream:#fdf8ed;
-    --dark:#3e2723;
-    --green:#2e7d32;
-    --red:#c62828;
-    --card-shadow: 0 4px 16px rgba(62,39,35,0.12);
-  }
-  *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; user-select:none;}
-  body{
-    font-family:'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    background:linear-gradient(160deg, var(--cream) 0%, #ffe9cf 100%);
-    color:var(--dark);
-    min-height:100vh;
-    overflow-x:hidden;
-  }
-  #app{max-width:480px; margin:0 auto; min-height:100vh; display:flex; flex-direction:column; padding:16px; padding-bottom:32px;}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Paella Pi 🥘 - Cook & Earn</title>
+  
+  <!-- Pi Network SDK v2.0 -->
+  <script src="https://sdk.minepi.com/pi-sdk.js"></script>
 
-  /* ---------- HEADER ---------- */
-  header.top{ text-align:center; margin-bottom:16px; }
-  header.top h1{ font-size:2rem; color:var(--orange); text-shadow:1px 1px 0 #fff; }
-  header.top p{ font-size:0.85rem; color:#8d6e63; font-weight:600; letter-spacing:.5px; margin-top:2px;}
+  <style>
+    :root {
+      --primary: #e65100;
+      --primary-dark: #b23c00;
+      --accent: #f57c00;
+      --bg-cream: #fdf8ed;
+      --card-bg: #ffffff;
+      --text-dark: #2c1810;
+      --text-muted: #6d4c41;
+      --success: #2e7d32;
+      --danger: #c62828;
+    }
 
-  /* ---------- CARDS ---------- */
-  .card{
-    background:#fff;
-    border-radius:18px;
-    padding:16px;
-    margin-bottom:14px;
-    box-shadow:var(--card-shadow);
-    border:1px solid #ffe0b2;
-  }
-  .card h2{ font-size:1rem; color:var(--orange); margin-bottom:10px; display:flex; align-items:center; gap:6px;}
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
 
-  /* Kitchen profile */
-  .profile-row{ display:flex; align-items:center; gap:12px; margin-bottom:12px;}
-  .avatar{
-    width:52px; height:52px; border-radius:50%;
-    background:linear-gradient(135deg,var(--orange),var(--orange-light));
-    display:flex; align-items:center; justify-content:center;
-    font-size:1.5rem; color:#fff; flex-shrink:0;
-  }
-  .profile-name{ font-weight:700; font-size:1.05rem; }
-  .profile-rank{ font-size:0.8rem; color:var(--green); font-weight:600; }
-  .stats-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; text-align:center;}
-  .stat-box{ background:var(--cream); border-radius:12px; padding:8px 4px; }
-  .stat-box .val{ font-size:1.1rem; font-weight:800; color:var(--orange); }
-  .stat-box .lbl{ font-size:0.65rem; color:#8d6e63; text-transform:uppercase; letter-spacing:.3px;}
+    body {
+      background-color: var(--bg-cream);
+      color: var(--text-dark);
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      padding: 12px;
+    }
 
-  /* Quests */
-  .quest{ display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px dashed #ffe0b2;}
-  .quest:last-child{ border-bottom:none; }
-  .quest-icon{ font-size:1.3rem; width:30px; text-align:center;}
-  .quest-info{ flex:1; }
-  .quest-title{ font-size:0.85rem; font-weight:600; }
-  .quest-progress-bar{ height:6px; background:#ffe0b2; border-radius:4px; margin-top:4px; overflow:hidden;}
-  .quest-progress-fill{ height:100%; background:var(--green); border-radius:4px; transition:width .3s; }
-  .quest-check{ font-size:1.2rem; color:var(--green); width:24px; text-align:center; }
+    .app-container {
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
 
-  /* Buttons */
-  .btn{
-    display:block; width:100%; padding:14px; border:none; border-radius:14px;
-    font-size:1rem; font-weight:700; cursor:pointer; margin-bottom:10px;
-    transition:transform .1s ease, box-shadow .2s ease;
-    box-shadow:0 3px 0 rgba(0,0,0,0.15);
-  }
-  .btn:active{ transform:translateY(2px); box-shadow:0 1px 0 rgba(0,0,0,0.15); }
-  .btn-primary{ background:var(--orange); color:#fff; }
-  .btn-secondary{ background:#fff; color:var(--orange); border:2px solid var(--orange); box-shadow:none;}
-  .btn-dark{ background:var(--dark); color:#fff; }
-  .btn:disabled{ opacity:0.5; cursor:not-allowed; }
+    /* Header */
+    header {
+      text-align: center;
+      padding: 8px 0;
+    }
 
-  /* ---------- MODAL ---------- */
-  .modal-overlay{
-    position:fixed; inset:0; background:rgba(62,39,35,0.55);
-    display:none; align-items:center; justify-content:center; z-index:100; padding:20px;
-  }
-  .modal-overlay.active{ display:flex; }
-  .modal-box{
-    background:#fff; border-radius:18px; padding:20px; max-width:420px; width:100%;
-    max-height:80vh; overflow-y:auto;
-  }
-  .modal-box h3{ color:var(--orange); margin-bottom:12px; }
-  .modal-box ul{ padding-left:18px; margin:10px 0; font-size:0.9rem; line-height:1.6; }
-  .modal-box .ingredient-legend{ display:flex; align-items:center; gap:8px; margin:6px 0; font-size:0.85rem;}
+    header h1 {
+      font-size: 2rem;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
 
-  /* ---------- GAME SCREEN ---------- */
-  #gameScreen{ display:none; flex-direction:column; height:100vh; padding:0; }
-  .game-hud{
-    display:flex; justify-content:space-between; align-items:center;
-    background:var(--dark); color:#fff; padding:10px 16px; font-weight:700; font-size:0.95rem;
-  }
-  .game-hud span.score-val{ color:var(--orange-light); }
-  .game-hud span.time-val{ color:#ffca28; }
-  #gameCanvas{ display:block; width:100%; flex:1; background:linear-gradient(180deg,#fff3e0,#ffe0b2); touch-action:none; }
+    header p {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
 
-  /* ---------- RESULTS SCREEN ---------- */
-  #resultsScreen{ display:none; }
-  .result-score{ text-align:center; margin:20px 0; }
-  .result-score .big{ font-size:3rem; font-weight:900; color:var(--orange); }
-  .result-score .small{ font-size:0.85rem; color:#8d6e63; }
-  .bonus-line{ display:flex; justify-content:space-between; padding:6px 0; font-size:0.9rem; border-bottom:1px solid #ffe0b2;}
-  .bonus-line:last-child{border-bottom:none;}
+    /* Cards */
+    .card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 4px 12px rgba(230, 81, 0, 0.08);
+      border: 1px solid rgba(230, 81, 0, 0.12);
+    }
 
-  .hidden{ display:none !important; }
-  .toast{
-    position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
-    background:var(--dark); color:#fff; padding:10px 18px; border-radius:30px;
-    font-size:0.85rem; z-index:200; opacity:0; transition:opacity .3s; pointer-events:none;
-  }
-  .toast.show{ opacity:1; }
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
 
-  .rank-badge{ display:inline-block; background:var(--cream); color:var(--orange); font-size:0.7rem; font-weight:700; padding:3px 8px; border-radius:20px; margin-top:4px;}
-</style>
+    /* Kitchen Profile Grid */
+    .profile-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .profile-stat {
+      background: var(--bg-cream);
+      padding: 10px;
+      border-radius: 10px;
+      text-align: center;
+    }
+
+    .profile-stat .label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .profile-stat .val {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--text-dark);
+      margin-top: 2px;
+    }
+
+    /* Daily Quests */
+    .quest-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .quest-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg-cream);
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+    }
+
+    .quest-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .quest-title {
+      font-weight: 600;
+    }
+
+    .quest-reward {
+      font-size: 0.75rem;
+      color: var(--primary);
+      font-weight: 700;
+    }
+
+    .badge {
+      font-size: 0.75rem;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-weight: 700;
+    }
+
+    .badge-pending { background: #ffe0b2; color: #e65100; }
+    .badge-done { background: #c8e6c9; color: #2e7d32; }
+
+    /* Action Buttons */
+    .btn-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: #ffffff;
+      box-shadow: 0 4px 10px rgba(230, 81, 0, 0.3);
+    }
+
+    .btn-primary:active {
+      transform: scale(0.98);
+    }
+
+    .btn-secondary {
+      background: #f5f5f5;
+      color: var(--text-dark);
+      border: 1px solid #ddd;
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+      padding: 16px;
+    }
+
+    .modal-content {
+      background: var(--card-bg);
+      border-radius: 16px;
+      max-width: 400px;
+      width: 100%;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .modal-content h3 { color: var(--primary); }
+    .modal-content ul { padding-left: 20px; font-size: 0.9rem; line-height: 1.5; }
+
+    /* Canvas View Container */
+    #gameScreen, #resultScreen {
+      display: none;
+    }
+
+    #gameCanvas {
+      width: 100%;
+      height: 480px;
+      background: #fff8e1;
+      border-radius: 16px;
+      border: 3px solid var(--primary);
+      touch-action: none;
+    }
+
+    .status-msg {
+      font-size: 0.85rem;
+      text-align: center;
+      color: var(--text-muted);
+    }
+  </style>
 </head>
 <body>
 
-<div id="app">
-
-  <!-- ================= HOME SCREEN ================= -->
-  <div id="homeScreen">
-    <header class="top">
+  <div class="app-container">
+    
+    <!-- HEADER -->
+    <header>
       <h1>Paella Pi 🥘</h1>
-      <p>COOK &amp; EARN THE $PAELLA AIRDROP</p>
+      <p>Cook & Earn $PAELLA Airdrop</p>
     </header>
 
-    <!-- Kitchen Profile -->
-    <div class="card">
-      <h2>👨‍🍳 Kitchen Profile</h2>
-      <div class="profile-row">
-        <div class="avatar" id="avatarInitial">π</div>
-        <div>
-          <div class="profile-name" id="profileName">Guest Chef</div>
-          <div class="rank-badge" id="profileRank">Rookie Chef</div>
+    <!-- PANTALLA INICIO / HOME -->
+    <main id="homeScreen" class="app-container">
+      
+      <!-- Kitchen Profile -->
+      <section class="card">
+        <div class="card-title">
+          <span>👨‍🍳 Kitchen Profile</span>
+          <span id="userHandle" style="font-size: 0.85rem; color: var(--primary);">@invitado</span>
+        </div>
+        <div class="profile-grid">
+          <div class="profile-stat">
+            <div class="label">Rango</div>
+            <div class="val" id="userRank">Rookie Chef</div>
+          </div>
+          <div class="profile-stat">
+            <div class="label">Puntos Totales</div>
+            <div class="val" id="userTotalPoints">0</div>
+          </div>
+          <div class="profile-stat">
+            <div class="label">Mejor Récord</div>
+            <div class="val" id="userHighScore">0</div>
+          </div>
+          <div class="profile-stat">
+            <div class="label">Partidas</div>
+            <div class="val" id="userMatches">0</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Daily Quests -->
+      <section class="card">
+        <div class="card-title">📜 Misiones Diarias</div>
+        <div class="quest-list" id="questList">
+          <!-- Dinámico -->
+        </div>
+      </section>
+
+      <!-- Botones de Acción -->
+      <section class="btn-group">
+        <button id="btnAuth" class="btn btn-secondary" onclick="loginWithPi()">
+          🔐 Sign in with Pi
+        </button>
+        
+        <button id="btnStart" class="btn btn-primary" onclick="startMatchFlow()">
+          🔥 Start Match (0.01 Test Pi)
+        </button>
+        
+        <button class="btn btn-secondary" onclick="toggleModal(true)">
+          📖 How to Play
+        </button>
+      </section>
+
+      <div class="status-msg" id="statusMsg">Listo para cocinar. Autentícate para guardar progreso.</div>
+    </main>
+
+    <!-- PANTALLA DEL JUEGO / CANVAS -->
+    <section id="gameScreen" class="app-container">
+      <div class="card" style="padding: 10px; display: flex; justify-content: space-between; font-weight: bold;">
+        <div>⏱️ Tiempo: <span id="timerText">60</span>s</div>
+        <div>🏆 Puntos: <span id="scoreText">0</span></div>
+      </div>
+      <canvas id="gameCanvas" width="360" height="480"></canvas>
+    </section>
+
+    <!-- PANTALLA DE RESULTADOS -->
+    <section id="resultScreen" class="app-container">
+      <div class="card" style="text-align: center;">
+        <h2 style="color: var(--primary); margin-bottom: 8px;">¡Tiempo Agotado! 🥘</h2>
+        <p style="color: var(--text-muted); margin-bottom: 16px;">Resumen de tu paella:</p>
+        
+        <div class="profile-grid" style="margin-bottom: 16px;">
+          <div class="profile-stat">
+            <div class="label">Puntos Partida</div>
+            <div class="val" id="resMatchScore">0</div>
+          </div>
+          <div class="profile-stat">
+            <div class="label">Bonus Misiones</div>
+            <div class="val" id="resQuestBonus">+0</div>
+          </div>
+        </div>
+
+        <p id="resRankText" style="font-size: 0.95rem; font-weight: 700; color: var(--success); margin-bottom: 16px;">
+          ¡Mantenlos viniendo para subir de rango!
+        </p>
+
+        <div class="btn-group">
+          <button class="btn btn-primary" onclick="startMatchFlow()">
+            🔄 Play Again (0.01 Test Pi)
+          </button>
+          <button class="btn btn-secondary" onclick="showHomeScreen()">
+            🏠 Back to Kitchen
+          </button>
         </div>
       </div>
-      <div class="stats-grid">
-        <div class="stat-box">
-          <div class="val" id="statTotalPoints">0</div>
-          <div class="lbl">Total Pts</div>
-        </div>
-        <div class="stat-box">
-          <div class="val" id="statBestScore">0</div>
-          <div class="lbl">Best Score</div>
-        </div>
-        <div class="stat-box">
-          <div class="val" id="statGamesPlayed">0</div>
-          <div class="lbl">Matches</div>
-        </div>
-      </div>
-    </div>
+    </section>
 
-    <!-- Daily Quests -->
-    <div class="card">
-      <h2>📋 Daily Quests</h2>
-      <div id="questList"></div>
-    </div>
-
-    <button class="btn btn-secondary" id="howToPlayBtn">📖 How to Play</button>
-    <button class="btn btn-dark" id="signInBtn">🔐 Sign in with Pi</button>
-    <button class="btn btn-primary" id="startMatchBtn" disabled>🍳 Start Match (0.01 Test Pi)</button>
-    <p style="text-align:center; font-size:0.7rem; color:#8d6e63; margin-top:4px;">Sign in with Pi to unlock matches • Testnet mode</p>
   </div>
 
-  <!-- ================= GAME SCREEN ================= -->
-  <div id="gameScreen">
-    <div class="game-hud">
-      <span>Score: <span class="score-val" id="hudScore">0</span></span>
-      <span>Time: <span class="time-val" id="hudTime">60</span>s</span>
+  <!-- MODAL HOW TO PLAY -->
+  <div id="howToPlayModal" class="modal">
+    <div class="modal-content">
+      <h3>🥘 ¿Cómo jugar a Paella Pi?</h3>
+      <ul>
+        <li><b>Mueve la paella:</b> Arrastra horizontalmente con el dedo o ratón.</li>
+        <li><b>Duración:</b> Cada partida dura 60 segundos.</li>
+        <li><b>Ingredientes Buenos:</b>
+          <br>Arroz (+10), Bajoqueta (+15), Pollo (+20), Conejo (+25), Garrofó (+30).
+        </li>
+        <li style="color: var(--danger); margin-top: 6px;"><b>Ingredientes Malos:</b>
+          <br>Fideos (-20), Ketchup (-25).
+        </li>
+        <li style="color: var(--danger); margin-top: 6px;"><b>⚠️ PELIGRO - Chorizo:</b>
+          <br>¡Arruina la paella! Reduce tu puntuación actual a la MITAD (50%).
+        </li>
+      </ul>
+      <button class="btn btn-primary" onclick="toggleModal(false)">¡Entendido!</button>
     </div>
-    <canvas id="gameCanvas"></canvas>
   </div>
 
-  <!-- ================= RESULTS SCREEN ================= -->
-  <div id="resultsScreen">
-    <header class="top">
-      <h1>Match Complete! 🎉</h1>
-    </header>
-    <div class="card">
-      <div class="result-score">
-        <div class="big" id="resultFinalScore">0</div>
-        <div class="small">POINTS EARNED</div>
-      </div>
-      <div class="bonus-line"><span>Base Score</span><span id="resultBase">0</span></div>
-      <div class="bonus-line"><span>Quest Bonus</span><span id="resultBonus">+0</span></div>
-      <div class="bonus-line"><span>New Rank</span><span id="resultRank">Rookie Chef</span></div>
-    </div>
-    <button class="btn btn-primary" id="playAgainBtn">🔁 Play Again (0.01 Test Pi)</button>
-    <button class="btn btn-secondary" id="backToKitchenBtn">🏠 Back to Kitchen</button>
-  </div>
-
-</div>
-
-<!-- ============ HOW TO PLAY MODAL ============ -->
-<div class="modal-overlay" id="howToPlayModal">
-  <div class="modal-box">
-    <h3>📖 How to Play</h3>
-    <p style="font-size:0.9rem;">Drag your finger (or mouse) left and right to move the paella pan and catch ingredients falling from the top. You have <strong>60 seconds</strong> per match.</p>
-    <ul>
-      <li class="ingredient-legend">🍚 Arroz &nbsp;<strong>+10</strong></li>
-      <li class="ingredient-legend">🫛 Bajoqueta &nbsp;<strong>+15</strong></li>
-      <li class="ingredient-legend">🍗 Pollo &nbsp;<strong>+20</strong></li>
-      <li class="ingredient-legend">🐇 Conejo &nbsp;<strong>+25</strong></li>
-      <li class="ingredient-legend">🫘 Garrofó &nbsp;<strong>+30</strong></li>
-      <li class="ingredient-legend">🍜 Fideos &nbsp;<strong style="color:var(--red);">-20</strong></li>
-      <li class="ingredient-legend">🥫 Ketchup &nbsp;<strong style="color:var(--red);">-25</strong></li>
-      <li class="ingredient-legend">🌭 Chorizo &nbsp;<strong style="color:var(--red);">-50% of current score!</strong></li>
-    </ul>
-    <p style="font-size:0.85rem; color:#8d6e63;">Complete Daily Quests for bonus points and climb the Chef ranks: Rookie Chef → Rice Talent → Paella Master → Legendary Chef.</p>
-    <button class="btn btn-primary" id="closeHowToPlayBtn" style="margin-top:14px;">Got it!</button>
-  </div>
-</div>
-
-<div class="toast" id="toast"></div>
-
-<script>
-/* =========================================================================
-   PAELLA PI — Cook & Earn $PAELLA Airdrop
-   Frontend: UI + Canvas 2D game + Pi Network SDK integration (Testnet)
-   ========================================================================= */
-
-/* -------------------- CONFIG -------------------- */
-const API_BASE = ""; // same-origin. Change to your backend URL if hosted separately.
-const MATCH_FEE = 0.01; // Test Pi
-const GAME_DURATION = 60; // seconds
-
-const RANKS = [
-  { name: "Rookie Chef",      min: 0 },
-  { name: "Rice Talent",      min: 500 },
-  { name: "Paella Master",    min: 2000 },
-  { name: "Legendary Chef",   min: 5000 },
-];
-
-const INGREDIENTS = [
-  { key:"arroz",     emoji:"🍚", points:10,  type:"good" },
-  { key:"bajoqueta", emoji:"🫛", points:15,  type:"good" },
-  { key:"pollo",     emoji:"🍗", points:20,  type:"good" },
-  { key:"conejo",    emoji:"🐇", points:25,  type:"good" },
-  { key:"garrofo",   emoji:"🫘", points:30,  type:"good" },
-  { key:"fideos",    emoji:"🍜", points:-20, type:"bad" },
-  { key:"ketchup",   emoji:"🥫", points:-25, type:"bad" },
-  { key:"chorizo",   emoji:"🌭", points:0,   type:"penalty" }, // special: halves score
-];
-
-/* -------------------- STATE -------------------- */
-let piUser = null;          // { uid, username }
-let userState = null;       // persisted profile in localStorage
-let currentQuests = [];     // today's 3 quests
-let matchStats = { caught:{}, score:0 };
-
-/* -------------------- DOM SHORTCUTS -------------------- */
-const $ = (id) => document.getElementById(id);
-const homeScreen = $("homeScreen");
-const gameScreen = $("gameScreen");
-const resultsScreen = $("resultsScreen");
-const toastEl = $("toast");
-
-function showToast(msg, ms=2500){
-  toastEl.textContent = msg;
-  toastEl.classList.add("show");
-  setTimeout(()=> toastEl.classList.remove("show"), ms);
-}
-
-function switchScreen(name){
-  homeScreen.style.display = name === "home" ? "block" : "none";
-  gameScreen.style.display = name === "game" ? "flex" : "none";
-  resultsScreen.style.display = name === "results" ? "block" : "none";
-}
-
-/* =========================================================================
-   PI NETWORK SDK INTEGRATION
-   ========================================================================= */
-
-function initPiSdk(){
-  try{
-    Pi.init({ version: "2.0", sandbox: true });
-  }catch(e){
-    console.error("Pi SDK failed to initialize", e);
-    showToast("⚠️ Pi SDK not available. Open this app inside Pi Browser.");
-  }
-}
-
-function onIncompletePaymentFound(payment){
-  // Called automatically by the SDK if a previous payment was left incomplete.
-  console.log("Incomplete payment found:", payment);
-  completePaymentOnServer(payment.identifier, payment.transaction?.txid)
-    .catch(err => console.error("Error auto-completing old payment:", err));
-}
-
-async function signInWithPi(){
-  if (typeof Pi === "undefined") {
-    showToast("⚠️ Please open Paella Pi inside the Pi Browser.");
-    return;
-  }
-  try{
-    const scopes = ["username", "payments"];
-    const authResult = await Pi.authenticate(scopes, onIncompletePaymentFound);
-    piUser = {
-      uid: authResult.user.uid,
-      username: authResult.user.username
+  <script>
+    // ==========================================
+    // CONFIGURACIÓN & ESTADO GLOBAL
+    // ==========================================
+    const BACKEND_URL = ""; // En producción colocar dominio backend (ej. https://mi-backend.com)
+    
+    let currentUser = null;
+    let userState = {
+      points: 0,
+      highScore: 0,
+      matches: 0,
+      garrofosCaught: 0,
+      chorizoAvoided: true,
+      quests: [
+        { id: 'q1', text: 'Atrapa 10 Garrofós', target: 10, current: 0, bonus: 50, done: false },
+        { id: 'q2', text: 'Consigue +300 pts en 1 partida', target: 300, current: 0, bonus: 100, done: false },
+        { id: 'q3', text: 'Esquiva todo el chorizo', target: 1, current: 0, bonus: 75, done: false }
+      ]
     };
-    loadUserState();
-    renderProfile();
-    $("signInBtn").textContent = "✅ Signed in";
-    $("signInBtn").disabled = true;
-    $("startMatchBtn").disabled = false;
-    showToast(`Welcome back, @${piUser.username}!`);
-  }catch(err){
-    console.error("Pi authentication failed:", err);
-    showToast("❌ Sign in failed. Try again.");
-  }
-}
 
-function createMatchPayment(onSuccessCallback){
-  if (typeof Pi === "undefined") {
-    showToast("⚠️ Please open Paella Pi inside the Pi Browser.");
-    return;
-  }
-  if (!piUser){
-    showToast("Please sign in with Pi first.");
-    return;
-  }
-
-  const paymentData = {
-    amount: MATCH_FEE,
-    memo: "Paella Pi - Start Match",
-    metadata: { type: "start_match", uid: piUser.uid, ts: Date.now() }
-  };
-
-  const callbacks = {
-    onReadyForServerApproval: async (paymentId) => {
-      console.log("onReadyForServerApproval", paymentId);
-      try{
-        await approvePaymentOnServer(paymentId);
-      }catch(err){
-        console.error("Approval failed:", err);
-        showToast("❌ Payment approval failed.");
+    // ==========================================
+    // PI NETWORK SDK INITIALIZATION & AUTH
+    // ==========================================
+    window.addEventListener('DOMContentLoaded', () => {
+      if (window.Pi) {
+        Pi.init({ version: "2.0", sandbox: true }); // TESTNET Sandbox
+        loginWithPi(true); // Intento de autologin
+      } else {
+        updateStatus("Pi SDK no detectado. Abre esta app en Pi Browser.");
       }
-    },
-    onReadyForServerCompletion: async (paymentId, txid) => {
-      console.log("onReadyForServerCompletion", paymentId, txid);
-      try{
-        await completePaymentOnServer(paymentId, txid);
-        showToast("✅ Payment completed. Let's cook!");
-        onSuccessCallback();
-      }catch(err){
-        console.error("Completion failed:", err);
-        showToast("❌ Payment completion failed.");
-      }
-    },
-    onCancel: (paymentId) => {
-      console.log("Payment cancelled", paymentId);
-      showToast("Payment cancelled.");
-    },
-    onError: (error, payment) => {
-      console.error("Payment error:", error, payment);
-      showToast("❌ Payment error. Please try again.");
-    }
-  };
+      renderQuests();
+    });
 
-  Pi.createPayment(paymentData, callbacks);
-}
-
-async function approvePaymentOnServer(paymentId){
-  const res = await fetch(`${API_BASE}/api/approve-payment`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ paymentId })
-  });
-  if (!res.ok) throw new Error("Server approval failed");
-  return res.json();
-}
-
-async function completePaymentOnServer(paymentId, txid){
-  const res = await fetch(`${API_BASE}/api/complete-payment`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ paymentId, txid })
-  });
-  if (!res.ok) throw new Error("Server completion failed");
-  return res.json();
-}
-
-/* =========================================================================
-   USER STATE / PERSISTENCE (localStorage keyed by Pi UID)
-   ========================================================================= */
-
-function storageKey(){
-  const id = piUser ? piUser.uid : "guest";
-  return `paellapi_state_${id}`;
-}
-
-function questsKey(){
-  const id = piUser ? piUser.uid : "guest";
-  const today = new Date().toISOString().slice(0,10);
-  return `paellapi_quests_${id}_${today}`;
-}
-
-function defaultState(){
-  return {
-    username: piUser ? piUser.username : "Guest Chef",
-    totalPoints: 0,
-    bestScore: 0,
-    gamesPlayed: 0
-  };
-}
-
-function loadUserState(){
-  const raw = localStorage.getItem(storageKey());
-  userState = raw ? JSON.parse(raw) : defaultState();
-  loadOrGenerateQuests();
-}
-
-function saveUserState(){
-  localStorage.setItem(storageKey(), JSON.stringify(userState));
-}
-
-/* -------------------- DAILY QUESTS -------------------- */
-
-const QUEST_POOL = [
-  { id:"catch_garrofo_10", title:"Catch 10 Garrofó", icon:"🫘", target:10, type:"catch", ingredient:"garrofo" },
-  { id:"catch_pollo_8",    title:"Catch 8 Pollo",     icon:"🍗", target:8,  type:"catch", ingredient:"pollo" },
-  { id:"catch_conejo_6",   title:"Catch 6 Conejo",    icon:"🐇", target:6,  type:"catch", ingredient:"conejo" },
-  { id:"score_300",        title:"Score +300 pts in one match", icon:"⭐", target:300, type:"score" },
-  { id:"score_500",        title:"Score +500 pts in one match", icon:"🌟", target:500, type:"score" },
-  { id:"avoid_chorizo",    title:"Finish a match without touching Chorizo", icon:"🚫🌭", target:1, type:"avoid_chorizo" },
-  { id:"catch_arroz_20",   title:"Catch 20 Arroz",    icon:"🍚", target:20, type:"catch", ingredient:"arroz" },
-  { id:"catch_bajoqueta_10",title:"Catch 10 Bajoqueta", icon:"🫛", target:10, type:"catch", ingredient:"bajoqueta" },
-];
-
-function pickDailyQuests(){
-  const shuffled = [...QUEST_POOL].sort(()=>Math.random()-0.5);
-  return shuffled.slice(0,3).map(q => ({ ...q, progress:0, completed:false, rewardGiven:false }));
-}
-
-function loadOrGenerateQuests(){
-  const raw = localStorage.getItem(questsKey());
-  currentQuests = raw ? JSON.parse(raw) : pickDailyQuests();
-  saveQuests();
-}
-
-function saveQuests(){
-  localStorage.setItem(questsKey(), JSON.stringify(currentQuests));
-}
-
-function renderQuests(){
-  const list = $("questList");
-  list.innerHTML = "";
-  currentQuests.forEach(q => {
-    const pct = Math.min(100, Math.round((q.progress / q.target) * 100));
-    const div = document.createElement("div");
-    div.className = "quest";
-    div.innerHTML = `
-      <div class="quest-icon">${q.icon}</div>
-      <div class="quest-info">
-        <div class="quest-title">${q.title}</div>
-        <div class="quest-progress-bar"><div class="quest-progress-fill" style="width:${pct}%"></div></div>
-      </div>
-      <div class="quest-check">${q.completed ? "✅" : ""}</div>
-    `;
-    list.appendChild(div);
-  });
-}
-
-function getRank(points){
-  let rank = RANKS[0].name;
-  for (const r of RANKS){ if (points >= r.min) rank = r.name; }
-  return rank;
-}
-
-function renderProfile(){
-  $("profileName").textContent = piUser ? `@${piUser.username}` : "Guest Chef";
-  $("avatarInitial").textContent = piUser ? piUser.username[0].toUpperCase() : "π";
-  $("profileRank").textContent = getRank(userState.totalPoints);
-  $("statTotalPoints").textContent = userState.totalPoints;
-  $("statBestScore").textContent = userState.bestScore;
-  $("statGamesPlayed").textContent = userState.gamesPlayed;
-  renderQuests();
-}
-
-/* =========================================================================
-   GAME ENGINE (Canvas 2D)
-   ========================================================================= */
-
-const canvas = $("gameCanvas");
-const ctx = canvas.getContext("2d");
-
-let panX = 0;
-let panWidth = 90;
-let panHeight = 46;
-let fallingItems = [];
-let spawnTimer = 0;
-let spawnInterval = 850; // ms, decreases over time for difficulty ramp
-let elapsedMs = 0;
-let lastFrameTime = 0;
-let gameRunning = false;
-let animFrameId = null;
-let hitChorizo = false;
-
-function resizeCanvas(){
-  canvas.width = canvas.clientWidth;
-  canvas.height = canvas.clientHeight;
-  panX = canvas.width / 2;
-}
-window.addEventListener("resize", resizeCanvas);
-
-function resetGameState(){
-  fallingItems = [];
-  spawnTimer = 0;
-  spawnInterval = 850;
-  elapsedMs = 0;
-  matchStats = { caught:{}, score:0 };
-  hitChorizo = false;
-  panX = canvas.width / 2;
-}
-
-function startMatch(){
-  switchScreen("game");
-  resizeCanvas();
-  resetGameState();
-  gameRunning = true;
-  lastFrameTime = performance.now();
-  animFrameId = requestAnimationFrame(gameLoop);
-}
-
-function spawnItem(){
-  const roll = Math.random();
-  let pool;
-  if (roll < 0.10) pool = INGREDIENTS.filter(i => i.type === "penalty");       // 10% chorizo
-  else if (roll < 0.30) pool = INGREDIENTS.filter(i => i.type === "bad");      // 20% bad
-  else pool = INGREDIENTS.filter(i => i.type === "good");                     // 70% good
-
-  const ing = pool[Math.floor(Math.random() * pool.length)];
-  fallingItems.push({
-    ...ing,
-    x: 20 + Math.random() * (canvas.width - 40),
-    y: -30,
-    speed: 2.2 + Math.random() * 1.8 + (elapsedMs / 30000), // ramps up with time
-    size: 30
-  });
-}
-
-function updateGame(dt){
-  elapsedMs += dt;
-  spawnTimer += dt;
-
-  const difficultyInterval = Math.max(400, spawnInterval - elapsedMs / 100);
-  if (spawnTimer > difficultyInterval){
-    spawnTimer = 0;
-    spawnItem();
-  }
-
-  const panY = canvas.height - 70;
-  for (let i = fallingItems.length - 1; i >= 0; i--){
-    const item = fallingItems[i];
-    item.y += item.speed;
-
-    // Collision check with pan
-    if (
-      item.y + item.size/2 >= panY &&
-      item.y - item.size/2 <= panY + panHeight &&
-      item.x >= panX - panWidth/2 &&
-      item.x <= panX + panWidth/2
-    ){
-      handleCatch(item);
-      fallingItems.splice(i, 1);
-      continue;
+    function updateStatus(msg) {
+      document.getElementById('statusMsg').innerText = msg;
     }
 
-    if (item.y > canvas.height + 40){
-      fallingItems.splice(i, 1);
+    function onIncompletePaymentFound(payment) {
+      console.log("Pago incompleto detectado:", payment);
+      // Enviar al backend para completar pagos pendientes
+      fetch(`${BACKEND_URL}/api/complete-payment`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paymentId: payment.identifier, txid: payment.transaction.txid })
+      });
     }
-  }
-}
 
-function handleCatch(item){
-  if (item.type === "penalty"){
-    matchStats.score = Math.floor(matchStats.score * 0.5);
-    hitChorizo = true;
-    showFloatingText("🌭 -50%!", item.x, item.y, "#c62828");
-  } else {
-    matchStats.score += item.points;
-    if (matchStats.score < 0) matchStats.score = 0;
-    matchStats.caught[item.key] = (matchStats.caught[item.key] || 0) + 1;
-    const color = item.type === "good" ? "#2e7d32" : "#c62828";
-    const sign = item.points > 0 ? "+" : "";
-    showFloatingText(`${sign}${item.points}`, item.x, item.y, color);
-  }
-  $("hudScore").textContent = matchStats.score;
-}
+    function loginWithPi(silent = false) {
+      const scopes = ['username', 'payments'];
+      
+      Pi.authenticate(scopes, onIncompletePaymentFound)
+        .then(auth => {
+          currentUser = auth.user;
+          document.getElementById('userHandle').innerText = `@${currentUser.username}`;
+          document.getElementById('btnAuth').innerText = `✅ @${currentUser.username}`;
+          document.getElementById('btnAuth').disabled = true;
+          
+          loadUserData();
+          updateStatus(`Bienvenido, Chef @${currentUser.username}`);
+        })
+        .catch(err => {
+          console.error("Auth Error:", err);
+          if (!silent) updateStatus("Error de autenticación con Pi.");
+        });
+    }
 
-let floatingTexts = [];
-function showFloatingText(text, x, y, color){
-  floatingTexts.push({ text, x, y, color, life: 700, maxLife: 700 });
-}
-
-function drawPan(){
-  const panY = canvas.height - 70;
-  ctx.save();
-  ctx.translate(panX, panY + panHeight/2);
-  ctx.font = "48px serif";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText("🥘", 0, 0);
-  ctx.restore();
-}
-
-function drawItems(){
-  ctx.font = "28px serif";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  fallingItems.forEach(item => {
-    ctx.fillText(item.emoji, item.x, item.y);
-  });
-}
-
-function drawFloatingTexts(dt){
-  ctx.textAlign = "center";
-  for (let i = floatingTexts.length - 1; i >= 0; i--){
-    const ft = floatingTexts[i];
-    ft.life -= dt;
-    if (ft.life <= 0){ floatingTexts.splice(i,1); continue; }
-    const alpha = ft.life / ft.maxLife;
-    ctx.globalAlpha = alpha;
-    ctx.fillStyle = ft.color;
-    ctx.font = "bold 18px sans-serif";
-    ctx.fillText(ft.text, ft.x, ft.y - (1 - alpha) * 30);
-    ctx.globalAlpha = 1;
-  }
-}
-
-function render(dt){
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  drawItems();
-  drawPan();
-  drawFloatingTexts(dt);
-}
-
-function gameLoop(now){
-  if (!gameRunning) return;
-  const dt = now - lastFrameTime;
-  lastFrameTime = now;
-
-  updateGame(dt);
-  render(dt);
-
-  const remaining = GAME_DURATION - Math.floor(elapsedMs / 1000);
-  $("hudTime").textContent = Math.max(0, remaining);
-
-  if (remaining <= 0){
-    endMatch();
-    return;
-  }
-  animFrameId = requestAnimationFrame(gameLoop);
-}
-
-function endMatch(){
-  gameRunning = false;
-  if (animFrameId) cancelAnimationFrame(animFrameId);
-  finalizeMatchResults();
-}
-
-/* -------------------- INPUT HANDLING -------------------- */
-function movePanTo(clientX){
-  const rect = canvas.getBoundingClientRect();
-  let x = clientX - rect.left;
-  x = Math.max(panWidth/2, Math.min(canvas.width - panWidth/2, x));
-  panX = x;
-}
-canvas.addEventListener("touchmove", (e) => {
-  e.preventDefault();
-  if (e.touches.length > 0) movePanTo(e.touches[0].clientX);
-}, { passive:false });
-canvas.addEventListener("mousemove", (e) => movePanTo(e.clientX));
-
-/* =========================================================================
-   RESULTS / QUEST EVALUATION
-   ========================================================================= */
-
-function evaluateQuests(){
-  let bonus = 0;
-  currentQuests.forEach(q => {
-    if (q.completed) return; // already completed today, no double reward
-
-    if (q.type === "catch"){
-      q.progress = matchStats.caught[q.ingredient] || 0;
-      if (q.progress >= q.target){
-        q.completed = true;
-        bonus += 100;
+    // ==========================================
+    // PERSISTENCIA LOCAL (localStorage por usuario)
+    // ==========================================
+    function loadUserData() {
+      if (!currentUser) return;
+      const key = `paella_pi_data_${currentUser.uid || currentUser.username}`;
+      const saved = localStorage.getItem(key);
+      if (saved) {
+        try {
+          userState = JSON.parse(saved);
+        } catch(e) { console.error(e); }
       }
-    } else if (q.type === "score"){
-      q.progress = matchStats.score;
-      if (matchStats.score >= q.target){
-        q.completed = true;
-        bonus += 100;
+      updateUIProfile();
+    }
+
+    function saveUserData() {
+      if (!currentUser) return;
+      const key = `paella_pi_data_${currentUser.uid || currentUser.username}`;
+      localStorage.setItem(key, JSON.stringify(userState));
+      updateUIProfile();
+    }
+
+    function updateUIProfile() {
+      document.getElementById('userTotalPoints').innerText = userState.points;
+      document.getElementById('userHighScore').innerText = userState.highScore;
+      document.getElementById('userMatches').innerText = userState.matches;
+      
+      // Cálculo de Rango
+      let rank = "Rookie Chef";
+      if (userState.points >= 1500) rank = "Paella Master 🏆";
+      else if (userState.points >= 800) rank = "Rice Talent 🌾";
+      else if (userState.points >= 300) rank = "Sous Chef 🔪";
+      
+      document.getElementById('userRank').innerText = rank;
+      renderQuests();
+    }
+
+    function renderQuests() {
+      const qList = document.getElementById('questList');
+      qList.innerHTML = userState.quests.map(q => `
+        <div class="quest-item">
+          <div class="quest-info">
+            <span class="quest-title">${q.text}</span>
+            <span class="quest-reward">+${q.bonus} pts bonus</span>
+          </div>
+          <span class="badge ${q.done ? 'badge-done' : 'badge-pending'}">
+            ${q.done ? 'COMPLETADA' : `${q.current}/${q.target}`}
+          </span>
+        </div>
+      `).join('');
+    }
+
+    // ==========================================
+    // FLUJO DE PAGO CON PI (0.01 Test Pi)
+    // ==========================================
+    function startMatchFlow() {
+      if (!currentUser) {
+        alert("Por favor, inicia sesión con Pi Network primero.");
+        loginWithPi();
+        return;
       }
-    } else if (q.type === "avoid_chorizo"){
-      q.progress = hitChorizo ? 0 : 1;
-      if (!hitChorizo){
-        q.completed = true;
-        bonus += 100;
+
+      updateStatus("Procesando pago de 0.01 Test Pi...");
+
+      const paymentData = {
+        amount: 0.01,
+        memo: "Inscripción Partida Paella Pi 🥘",
+        metadata: { type: "match_entry", username: currentUser.username }
+      };
+
+      const callbacks = {
+        onReadyForServerApproval: function(paymentId) {
+          console.log("Aprobando pago en servidor:", paymentId);
+          fetch(`${BACKEND_URL}/api/approve-payment`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ paymentId })
+          })
+          .then(res => res.json())
+          .then(data => console.log("Aprobado:", data))
+          .catch(err => console.error("Error approval:", err));
+        },
+
+        onReadyForServerCompletion: function(paymentId, txid) {
+          console.log("Completando pago en servidor:", paymentId, txid);
+          fetch(`${BACKEND_URL}/api/complete-payment`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ paymentId, txid })
+          })
+          .then(res => res.json())
+          .then(data => {
+            console.log("Completado con éxito:", data);
+            updateStatus("¡Pago confirmado! Iniciando partida...");
+            initAndStartGame();
+          })
+          .catch(err => console.error("Error completion:", err));
+        },
+
+        onCancel: function(paymentId) {
+          updateStatus("Pago cancelado por el usuario.");
+        },
+
+        onError: function(error, payment) {
+          console.error("Error en pago:", error, payment);
+          updateStatus("Error durante la transacción de Pi.");
+        }
+      };
+
+      Pi.createPayment(paymentData, callbacks);
+    }
+
+    // ==========================================
+    // LÓGICA DEL JUEGO (CANVAS 2D)
+    // ==========================================
+    let canvas, ctx;
+    let gameInterval, spawnInterval, timerInterval;
+    let gameTime = 60;
+    let score = 0;
+    let items = [];
+    let pan = { x: 130, y: 420, width: 100, height: 24 };
+    let chorizoAvoidedInMatch = true;
+    let garrofosMatch = 0;
+
+    const ITEM_TYPES = [
+      { name: 'Arroz', icon: '🍚', pts: 10, prob: 0.25 },
+      { name: 'Bajoqueta', icon: '🫛', pts: 15, prob: 0.20 },
+      { name: 'Pollo', icon: '🍗', pts: 20, prob: 0.18 },
+      { name: 'Conejo', icon: '🐇', pts: 25, prob: 0.12 },
+      { name: 'Garrofó', icon: '🫘', pts: 30, prob: 0.10 },
+      { name: 'Fideos', icon: '🍜', pts: -20, prob: 0.07 },
+      { name: 'Ketchup', icon: '🥫', pts: -25, prob: 0.05 },
+      { name: 'Chorizo', icon: '🌭', pts: 0, prob: 0.03, isChorizo: true }
+    ];
+
+    function initAndStartGame() {
+      document.getElementById('homeScreen').style.display = 'none';
+      document.getElementById('resultScreen').style.display = 'none';
+      document.getElementById('gameScreen').style.display = 'flex';
+
+      canvas = document.getElementById('gameCanvas');
+      ctx = canvas.getContext('2d');
+
+      score = 0;
+      gameTime = 60;
+      items = [];
+      garrofosMatch = 0;
+      chorizoAvoidedInMatch = true;
+      pan.x = canvas.width / 2 - pan.width / 2;
+
+      document.getElementById('scoreText').innerText = score;
+      document.getElementById('timerText').innerText = gameTime;
+
+      // Listeners táctiles/ratón
+      canvas.removeEventListener('mousemove', handleMove);
+      canvas.removeEventListener('touchmove', handleMove);
+      canvas.addEventListener('mousemove', handleMove);
+      canvas.addEventListener('touchmove', handleMove, { passive: false });
+
+      // Loops del juego
+      gameInterval = requestAnimationFrame(gameLoop);
+      spawnInterval = setInterval(spawnItem, 700);
+      timerInterval = setInterval(() => {
+        gameTime--;
+        document.getElementById('timerText').innerText = gameTime;
+        if (gameTime <= 0) endGame();
+      }, 1000);
+    }
+
+    function handleMove(e) {
+      e.preventDefault();
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const mouseX = clientX - rect.left;
+      pan.x = Math.max(0, Math.min(canvas.width - pan.width, mouseX - pan.width / 2));
+    }
+
+    function getRandomItem() {
+      const rand = Math.random();
+      let cumulative = 0;
+      for (let item of ITEM_TYPES) {
+        cumulative += item.prob;
+        if (rand <= cumulative) return { ...item };
+      }
+      return { ...ITEM_TYPES[0] };
+    }
+
+    function spawnItem() {
+      const item = getRandomItem();
+      items.push({
+        ...item,
+        x: Math.random() * (canvas.width - 30) + 15,
+        y: -20,
+        speed: 2.5 + Math.random() * 2
+      });
+    }
+
+    function gameLoop() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Dibujar Paella (Sartén)
+      ctx.fillStyle = "#333333";
+      ctx.beginPath();
+      ctx.roundRect(pan.x, pan.y, pan.width, pan.height, [0, 0, 12, 12]);
+      ctx.fill();
+      
+      // Asas de la paella
+      ctx.fillStyle = "#e65100";
+      ctx.fillRect(pan.x - 8, pan.y + 4, 8, 8);
+      ctx.fillRect(pan.x + pan.width, pan.y + 4, 8, 8);
+
+      // Actualizar e items
+      for (let i = items.length - 1; i >= 0; i--) {
+        let it = items[i];
+        it.y += it.speed;
+
+        // Render emoji
+        ctx.font = "24px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(it.icon, it.x, it.y);
+
+        // Colisión con paella
+        if (
+          it.y >= pan.y - 10 && it.y <= pan.y + pan.height &&
+          it.x >= pan.x && it.x <= pan.x + pan.width
+        ) {
+          if (it.isChorizo) {
+            score = Math.floor(score * 0.5); // PENALIZACIÓN 50%
+            chorizoAvoidedInMatch = false;
+          } else {
+            score += it.pts;
+            if (it.name === 'Garrofó') garrofosMatch++;
+          }
+          
+          if (score < 0) score = 0;
+          document.getElementById('scoreText').innerText = score;
+          items.splice(i, 1);
+          continue;
+        }
+
+        // Eliminar al salir por abajo
+        if (it.y > canvas.height + 30) {
+          items.splice(i, 1);
+        }
+      }
+
+      if (gameTime > 0) {
+        requestAnimationFrame(gameLoop);
       }
     }
-  });
-  saveQuests();
-  return bonus;
-}
 
-function finalizeMatchResults(){
-  const baseScore = matchStats.score;
-  const bonus = evaluateQuests();
-  const totalEarned = baseScore + bonus;
+    function endGame() {
+      clearInterval(spawnInterval);
+      clearInterval(timerInterval);
 
-  userState.totalPoints += totalEarned;
-  userState.bestScore = Math.max(userState.bestScore, baseScore);
-  userState.gamesPlayed += 1;
-  saveUserState();
+      // Actualización de estado global y Misiones
+      userState.matches++;
+      if (score > userState.highScore) userState.highScore = score;
+      
+      // Evaluar Quests
+      let questBonus = 0;
+      
+      // Q1: Garrofós
+      userState.quests[0].current += garrofosMatch;
+      if (userState.quests[0].current >= userState.quests[0].target && !userState.quests[0].done) {
+        userState.quests[0].done = true;
+        questBonus += userState.quests[0].bonus;
+      }
 
-  $("resultFinalScore").textContent = totalEarned;
-  $("resultBase").textContent = baseScore;
-  $("resultBonus").textContent = `+${bonus}`;
-  $("resultRank").textContent = getRank(userState.totalPoints);
+      // Q2: 300 pts en 1 partida
+      if (score >= userState.quests[1].target && !userState.quests[1].done) {
+        userState.quests[1].done = true;
+        questBonus += userState.quests[1].bonus;
+      }
 
-  renderProfile();
-  switchScreen("results");
-}
+      // Q3: Esquivar todo el chorizo
+      if (chorizoAvoidedInMatch && !userState.quests[2].done) {
+        userState.quests[2].current = 1;
+        userState.quests[2].done = true;
+        questBonus += userState.quests[2].bonus;
+      }
 
-/* =========================================================================
-   EVENT LISTENERS
-   ========================================================================= */
+      const totalEarned = score + questBonus;
+      userState.points += totalEarned;
 
-$("signInBtn").addEventListener("click", signInWithPi);
+      saveUserData();
 
-$("startMatchBtn").addEventListener("click", () => {
-  createMatchPayment(() => startMatch());
-});
+      // UI Resultados
+      document.getElementById('resMatchScore').innerText = score;
+      document.getElementById('resQuestBonus').innerText = `+${questBonus}`;
+      
+      document.getElementById('gameScreen').style.display = 'none';
+      document.getElementById('resultScreen').style.display = 'flex';
+    }
 
-$("playAgainBtn").addEventListener("click", () => {
-  createMatchPayment(() => startMatch());
-});
+    // Nav Helpers
+    function showHomeScreen() {
+      document.getElementById('resultScreen').style.display = 'none';
+      document.getElementById('gameScreen').style.display = 'none';
+      document.getElementById('homeScreen').style.display = 'flex';
+    }
 
-$("backToKitchenBtn").addEventListener("click", () => {
-  switchScreen("home");
-});
-
-$("howToPlayBtn").addEventListener("click", () => {
-  $("howToPlayModal").classList.add("active");
-});
-$("closeHowToPlayBtn").addEventListener("click", () => {
-  $("howToPlayModal").classList.remove("active");
-});
-$("howToPlayModal").addEventListener("click", (e) => {
-  if (e.target.id === "howToPlayModal") $("howToPlayModal").classList.remove("active");
-});
-
-/* =========================================================================
-   INIT
-   ========================================================================= */
-function init(){
-  initPiSdk();
-  loadUserState();
-  renderProfile();
-  switchScreen("home");
-}
-init();
-</script>
+    function toggleModal(show) {
+      document.getElementById('howToPlayModal').style.display = show ? 'flex' : 'none';
+    }
+  </script>
 </body>
 </html>
