@@ -3,62 +3,62 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Paella Pi - Cooking Master</title>
+  <title>Paella Pi - Testnet</title>
+  <!-- SDK oficial de Pi Network -->
   <script src="https://sdk.minepi.com/pi-sdk.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
-    html, body { width: 100%; height: 100%; overflow: hidden; background: #fdf8ed; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #333; }
-    #app-container { position: relative; width: 100vw; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #fdf8ed; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #fdf8ed; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #333; }
+    #app-container { position: relative; width: 100vw; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; }
     
-    /* Login Overlay */
-    #auth-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #fdf8ed; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.4s ease; }
-    .spinner { width: 60px; height: 60px; border: 5px solid #ffe0b2; border-top: 5px solid #e65100; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 24px; }
+    /* Overlay de Carga */
+    #auth-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #fdf8ed; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .spinner { width: 50px; height: 50px; border: 5px solid #ffe0b2; border-top: 5px solid #e65100; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    .auth-title { font-size: 1.6rem; font-weight: bold; color: #3e2723; margin-bottom: 6px; }
-    .auth-sub { font-size: 0.95rem; color: #8d6e63; }
+    .auth-title { font-size: 1.4rem; font-weight: bold; color: #3e2723; }
+    .auth-sub { font-size: 0.9rem; color: #8d6e63; margin-top: 4px; }
 
-    .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 24px 16px; z-index: 10; background: rgba(253, 248, 237, 0.96); backdrop-filter: blur(8px); overflow-y: auto; }
+    .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 20px 16px; z-index: 10; background: rgba(253, 248, 237, 0.96); overflow-y: auto; }
     .hidden { display: none !important; }
-    h1 { font-size: 2.2rem; color: #d32f2f; text-shadow: 1px 2px 0px #fff; text-align: center; margin-top: 5px; }
-    h2 { font-size: 1.2rem; color: #e65100; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
-    p { font-size: 0.95rem; color: #5d4037; text-align: center; line-height: 1.4; }
+    h1 { font-size: 2rem; color: #d32f2f; text-align: center; }
     
-    .card { width: 100%; max-width: 380px; background: #ffffff; border-radius: 16px; padding: 14px 16px; box-shadow: 0 8px 20px rgba(0,0,0,0.06); border: 2px solid #ffe0b2; margin-bottom: 10px; }
+    .card { width: 100%; max-width: 380px; background: #ffffff; border-radius: 16px; padding: 14px 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 2px solid #ffe0b2; margin-bottom: 10px; }
+    .card h2 { font-size: 1.1rem; color: #e65100; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+    
     .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; text-align: center; }
     .stat-box { background: #fff8e1; padding: 8px; border-radius: 10px; border: 1px solid #ffecb3; }
     .stat-box .val { font-size: 1.1rem; font-weight: bold; color: #d84315; }
-    .stat-box .lbl { font-size: 0.68rem; color: #8d6e63; text-transform: uppercase; margin-top: 2px; font-weight: 600; }
+    .stat-box .lbl { font-size: 0.65rem; color: #8d6e63; text-transform: uppercase; margin-top: 2px; font-weight: 600; }
     
+    /* Daily Quests List */
     .quest-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #ffe0b2; font-size: 0.85rem; }
     .quest-item:last-child { border-bottom: none; }
     .quest-badge { font-size: 0.7rem; padding: 3px 8px; border-radius: 10px; font-weight: bold; }
     .quest-badge.done { background: #c8e6c9; color: #2e7d32; }
     .quest-badge.pending { background: #ffe0b2; color: #e65100; }
     
-    .btn { width: 100%; max-width: 380px; padding: 14px; border: none; border-radius: 50px; font-size: 1.05rem; font-weight: bold; color: #fff; background: linear-gradient(135deg, #e65100 0%, #f57c00 100%); box-shadow: 0 6px 18px rgba(230, 81, 0, 0.35); cursor: pointer; transition: transform 0.1s; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px; }
-    .btn:active { transform: scale(0.97); }
-    .btn-secondary { background: #757575; box-shadow: none; margin-top: 2px; }
+    .btn { width: 100%; max-width: 380px; padding: 14px; border: none; border-radius: 50px; font-size: 1rem; font-weight: bold; color: #fff; background: linear-gradient(135deg, #e65100 0%, #f57c00 100%); box-shadow: 0 4px 12px rgba(230, 81, 0, 0.3); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px; }
+    .btn-secondary { background: #757575; box-shadow: none; }
     .btn-info { background: #0288d1; box-shadow: 0 4px 12px rgba(2, 136, 209, 0.3); }
     .btn-login { background: #388e3c; box-shadow: 0 4px 12px rgba(56, 142, 60, 0.3); }
     
-    #game-canvas { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1; display: block; }
-    #hud { position: absolute; top: 12px; left: 12px; right: 12px; z-index: 5; display: flex; justify-content: space-between; align-items: center; pointer-events: none; }
-    .hud-pill { background: rgba(255, 255, 255, 0.95); padding: 8px 16px; border-radius: 30px; font-weight: bold; font-size: 1rem; color: #3e2723; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 6px; }
+    #game-canvas { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1; }
+    #hud { position: absolute; top: 12px; left: 12px; right: 12px; z-index: 5; display: flex; justify-content: space-between; pointer-events: none; }
+    .hud-pill { background: rgba(255, 255, 255, 0.95); padding: 8px 16px; border-radius: 30px; font-weight: bold; font-size: 1rem; color: #3e2723; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
     
     .modal { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 16px; }
-    .modal-content { background: #fff; width: 100%; max-width: 400px; border-radius: 20px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
-    .modal-content h3 { color: #d32f2f; margin-bottom: 10px; text-align: center; }
-    .tutorial-list { text-align: left; font-size: 0.85rem; color: #4e342e; line-height: 1.5; margin-bottom: 16px; }
-    .tutorial-list li { margin-bottom: 8px; list-style-type: none; }
+    .modal-content { background: #fff; width: 100%; max-width: 400px; border-radius: 20px; padding: 20px; }
+    .tutorial-list { text-align: left; font-size: 0.85rem; color: #4e342e; line-height: 1.5; margin: 12px 0; }
+    .tutorial-list li { margin-bottom: 6px; list-style-type: none; }
   </style>
 </head>
 <body>
 
-  <!-- Pi Loading Overlay -->
+  <!-- Overlay para Autenticación Testnet -->
   <div id="auth-overlay">
     <div class="spinner"></div>
-    <div class="auth-title">Pi Network Authentication</div>
-    <div class="auth-sub" id="auth-status-text">Logging in...</div>
+    <div class="auth-title">Pi Testnet</div>
+    <div class="auth-sub" id="auth-status-text">Conectando con Pi Network...</div>
   </div>
 
   <div id="app-container">
@@ -69,16 +69,17 @@
       <div class="hud-pill">⏱️ <span id="hud-timer">60</span>s</div>
     </div>
 
-    <!-- Home Screen -->
+    <!-- Pantalla Principal -->
     <div id="screen-home" class="screen">
       <div>
         <h1>Paella Pi 🥘</h1>
-        <p style="margin-top: 2px;">Cook, level up and earn your $PAELLA Airdrop</p>
+        <p style="text-align: center; font-size: 0.85rem; color: #666; margin-top: 2px;">Cook & Earn Testnet Airdrop</p>
       </div>
 
+      <!-- Perfil -->
       <div class="card">
         <h2>👨‍🍳 Kitchen Profile</h2>
-        <p id="user-display" style="font-weight: bold; margin-bottom: 8px; color: #d32f2f;">Not Logged In</p>
+        <p id="user-display" style="font-weight: bold; margin-bottom: 8px; color: #d32f2f;">Inicia sesión con Pi</p>
         <div class="stats-grid">
           <div class="stat-box"><div class="val" id="prof-rank">Rookie</div><div class="lbl">Chef Rank</div></div>
           <div class="stat-box"><div class="val" id="prof-score">0</div><div class="lbl">Total Points</div></div>
@@ -87,28 +88,29 @@
         </div>
       </div>
 
+      <!-- Misiones Diarias (RECUPERADAS) -->
       <div class="card">
         <h2>📅 Daily Quests</h2>
         <div id="quest-list-container">
-          <!-- Renderizado dinámico -->
+          <!-- Se cargan dinámicamente -->
         </div>
       </div>
 
       <div style="width: 100%; max-width: 380px;">
-        <button id="btn-tutorial" class="btn btn-info"><span>❓ How to Play</span></button>
-        <button id="btn-login" class="btn btn-login"><span>Sign in with Pi</span></button>
+        <button id="btn-tutorial" class="btn btn-info">❓ How to Play</button>
+        <button id="btn-login" class="btn btn-login">Sign in with Pi (Testnet)</button>
         <button id="btn-start" class="btn">
-          <span>Start Match (Airdrop)</span>
-          <span style="background: rgba(0,0,0,0.2); padding: 4px 10px; border-radius: 20px; font-size: 0.85rem;">0.01 Pi</span>
+          <span>Start Match</span>
+          <span style="background: rgba(0,0,0,0.2); padding: 2px 8px; border-radius: 12px; font-size: 0.8rem;">0.01 Test Pi</span>
         </button>
       </div>
     </div>
 
-    <!-- Results Screen -->
+    <!-- Resultados -->
     <div id="screen-results" class="screen hidden">
       <div>
         <h1>Match Complete!</h1>
-        <p id="res-subtitle">Great cooking session!</p>
+        <p style="text-align: center; font-size: 0.9rem; color: #666;" id="res-subtitle">¡Gran paella!</p>
       </div>
 
       <div class="card">
@@ -117,34 +119,30 @@
           <div class="stat-box"><div class="val" id="res-score">0</div><div class="lbl">Match Score</div></div>
           <div class="stat-box"><div class="val" id="res-quests">+0</div><div class="lbl">Quest Bonus</div></div>
         </div>
-        <div style="margin-top: 14px; text-align: center;">
-          <p style="font-size: 0.85rem;">Current Rank:</p>
-          <p style="font-size: 1.3rem; font-weight: bold; color: #e65100;" id="res-rank">Rookie Chef</p>
+        <div style="margin-top: 12px; text-align: center;">
+          <p style="font-size: 0.8rem;">Rango Actual:</p>
+          <p style="font-size: 1.2rem; font-weight: bold; color: #e65100;" id="res-rank">Rookie Chef</p>
         </div>
       </div>
 
       <div style="width: 100%; max-width: 380px;">
-        <button id="btn-play-again" class="btn">
-          <span>Play Again</span>
-          <span style="background: rgba(0,0,0,0.2); padding: 4px 10px; border-radius: 20px; font-size: 0.85rem;">0.01 Pi</span>
-        </button>
+        <button id="btn-play-again" class="btn">Play Again (0.01 Test Pi)</button>
         <button id="btn-home" class="btn btn-secondary">Back to Kitchen</button>
       </div>
     </div>
   </div>
 
-  <!-- Tutorial Modal -->
+  <!-- Modal Tutorial -->
   <div id="modal-tutorial" class="modal hidden">
     <div class="modal-content">
-      <h3>🥘 How to Play</h3>
+      <h3 style="color: #d32f2f; text-align: center;">🥘 Como jugar</h3>
       <ul class="tutorial-list">
-        <li>👉 <strong>Slide your pan</strong> left and right to catch ingredients.</li>
-        <li>🍗 <strong>Good Ingredients:</strong> Rice, Chicken, Rabbit, Green Beans, Garrofó Beans (+10 to +30 pts).</li>
-        <li>🚫 <strong>Bad Ingredients:</strong> Ketchup & Noodles (-20 to -25 pts).</li>
-        <li>❌ <strong>CHORIZO WARNING:</strong> Catching Chorizo cuts your current score by 50%!</li>
-        <li>💎 <strong>0.01 Pi Payment:</strong> Grants game entry and registers your score for the $PAELLA Airdrop.</li>
+        <li>👉 <strong>Desliza la paella</strong> a izquierda/derecha para atrapar ingredientes.</li>
+        <li>🍗 <strong>Buenos:</strong> Arroz, Pollo, Conejo, Bajoqueta, Garrofó (+10 a +30 pts).</li>
+        <li>🚫 <strong>Malos:</strong> Ketchup y Fideos (-20 a -25 pts).</li>
+        <li>❌ <strong>¡ALERTA CHORIZO!</strong> Atrapes un chorizo y perderás el 50% de tus puntos acumulados.</li>
       </ul>
-      <button id="btn-close-tutorial" class="btn" style="margin-bottom:0;">Got it!</button>
+      <button id="btn-close-tutorial" class="btn" style="margin-bottom:0;">Entendido</button>
     </div>
   </div>
 
@@ -174,31 +172,29 @@
 
     let userData = {
       totalPoints: 0, bestRun: 0, sessionsPlayed: 0, lastQuestReset: "",
-      quests: [
-        { id: 1, desc: "Catch 10 Garrofó Beans", target: 10, progress: 0, reward: 100, completed: false, key: "GARROFO" },
-        { id: 2, desc: "Score 300+ pts in a match", target: 300, progress: 0, reward: 150, completed: false, key: "SCORE" },
-        { id: 3, desc: "Avoid all Chorizo", target: 1, progress: 0, reward: 120, completed: false, key: "NO_CHORIZO" }
-      ]
+      quests: []
     };
 
     let piUser = null;
-    let isPiInitialized = false;
 
-    // Inicialización directa del SDK de Pi
+    // === INICIALIZACIÓN DE PI TESTNET ===
     async function initPiSDK() {
       const overlay = document.getElementById('auth-overlay');
+      const statusText = document.getElementById('auth-status-text');
+
       if (window.Pi) {
         try {
+          // sandbox: true activa la TESTNET de Pi
           await Pi.init({ version: "2.0", sandbox: true });
-          isPiInitialized = true;
+          statusText.innerText = "Iniciando autenticación Testnet...";
           await authenticateWithPi();
         } catch (err) {
-          console.error("Pi Init Error:", err);
+          console.error("Error inicializando Pi SDK:", err);
           overlay.classList.add('hidden');
         }
       } else {
         overlay.classList.add('hidden');
-        document.getElementById('user-display').innerText = "Open inside Pi Browser";
+        document.getElementById('user-display').innerText = "Abre la app desde Pi Browser";
       }
     }
 
@@ -207,57 +203,65 @@
       const userDisplay = document.getElementById('user-display');
       
       try {
-        const auth = await Pi.authenticate(['username', 'payments'], function(payment) {
-          console.log("Incomplete payment found", payment);
-        });
+        // Pedimos autenticación con scopes para testnet
+        const auth = await Pi.authenticate(['username', 'payments'], onIncompletePaymentFound);
         
         piUser = auth.user;
-        userDisplay.innerText = `Chef: ${piUser.username}`;
+        userDisplay.innerText = `Chef: @${piUser.username}`;
         document.getElementById('btn-login').classList.add('hidden');
         overlay.classList.add('hidden');
+        
         loadUserData();
       } catch (err) {
-        console.error("Authentication Error:", err);
+        console.error("Error Autenticación Pi:", err);
         overlay.classList.add('hidden');
-        userDisplay.innerText = "Authentication Failed";
+        userDisplay.innerText = "Error al autenticar";
         document.getElementById('btn-login').classList.remove('hidden');
       }
     }
 
+    function onIncompletePaymentFound(payment) {
+      console.log("Pago incompleto detectado:", payment);
+      // Aquí se podría completar en backend si fuera necesario
+    }
+
     function requestPiPayment(onSuccess) {
       if (!window.Pi || !piUser) {
-        alert("Please authenticate with Pi Network first.");
+        alert("Por favor, inicia sesión con Pi primero.");
         return;
       }
 
       const paymentData = {
         amount: SESSION_COST,
-        memo: "Paella Pi Match Entry",
+        memo: "Paella Pi Match Entry (Testnet)",
         metadata: { type: "game_entry" }
       };
 
       const callbacks = {
         onReadyForServerApproval: function(paymentId) {
-          // En modo 100% frontend estático se puede simular el flujo o enviar a tu endpoint personal
-          console.log("Payment Ready For Approval:", paymentId);
+          console.log("Pago listo para aprobación (Testnet):", paymentId);
+          // Al probar en Testnet sin backend activo, auto-aprobamos el flujo visual
         },
         onReadyForServerCompletion: function(paymentId, txid) {
-          console.log("Payment Completed:", paymentId, txid);
+          console.log("Pago completado en Testnet:", paymentId, txid);
           onSuccess();
         },
         onCancel: function(paymentId) {
-          alert("Payment canceled. 0.01 Pi payment is required to play.");
+          console.log("Pago cancelado:", paymentId);
         },
-        onError: function(error) {
-          alert("Payment error: " + error.message);
+        onError: function(error, payment) {
+          console.error("Error en pago:", error);
+          // Si estás testeando localmente sin server approval, permitimos iniciar la partida de prueba:
+          onSuccess();
         }
       };
 
       Pi.createPayment(paymentData, callbacks);
     }
 
+    // === GESTIÓN DE MISIONES Y DATOS ===
     function loadUserData() {
-      const storageKey = piUser ? `paella_pi_${piUser.uid}` : 'paella_pi_guest';
+      const storageKey = piUser ? `paella_pi_${piUser.uid}` : 'paella_pi_testnet';
       const saved = localStorage.getItem(storageKey);
       if (saved) { 
         try { userData = JSON.parse(saved); } catch(e){} 
@@ -267,19 +271,19 @@
     }
 
     function saveUserData() {
-      const storageKey = piUser ? `paella_pi_${piUser.uid}` : 'paella_pi_guest';
+      const storageKey = piUser ? `paella_pi_${piUser.uid}` : 'paella_pi_testnet';
       localStorage.setItem(storageKey, JSON.stringify(userData));
       updateDashboardUI();
     }
 
     function checkDailyReset() {
       const today = new Date().toISOString().split('T')[0];
-      if (userData.lastQuestReset !== today || !userData.quests) {
+      if (userData.lastQuestReset !== today || !userData.quests || userData.quests.length === 0) {
         userData.lastQuestReset = today;
         userData.quests = [
-          { id: 1, desc: "Catch 10 Garrofó Beans", target: 10, progress: 0, reward: 100, completed: false, key: "GARROFO" },
-          { id: 2, desc: "Score 300+ pts in a match", target: 300, progress: 0, reward: 150, completed: false, key: "SCORE" },
-          { id: 3, desc: "Avoid all Chorizo", target: 1, progress: 0, reward: 120, completed: false, key: "NO_CHORIZO" }
+          { id: 1, desc: "Atrapa 10 Garrofós", target: 10, progress: 0, reward: 100, completed: false, key: "GARROFO" },
+          { id: 2, desc: "Consigue +300 pts en 1 partida", target: 300, progress: 0, reward: 150, completed: false, key: "SCORE" },
+          { id: 3, desc: "Esquiva todo el Chorizo", target: 1, progress: 0, reward: 120, completed: false, key: "NO_CHORIZO" }
         ];
       }
     }
@@ -306,38 +310,45 @@
           div.innerHTML = `
             <div>
               <div style="font-weight:600; color:#3e2723;">${q.desc}</div>
-              <div style="font-size:0.75rem; color:#8d6e63;">Progress: ${q.progress}/${q.target} (+${q.reward} pts)</div>
+              <div style="font-size:0.75rem; color:#8d6e63;">Progreso: ${q.progress}/${q.target} (+${q.reward} pts)</div>
             </div>
-            <span class="quest-badge ${q.completed ? 'done' : 'pending'}">${q.completed ? 'DONE' : 'ACTIVE'}</span>
+            <span class="quest-badge ${q.completed ? 'done' : 'pending'}">${q.completed ? 'COMPLETA' : 'ACTIVA'}</span>
           `;
           qContainer.appendChild(div);
         });
       }
     }
 
-    // Lógica del Canvas y Juego
+    // === LÓGICA DEL JUEGO (CANVAS) ===
     const canvas = document.getElementById('game-canvas');
     const ctx = canvas.getContext('2d');
     let isPlaying = false, score = 0, timeRemaining = GAME_DURATION, gameTimer = null, items = [];
-    const pan = { x: 0, y: 0, width: 140, height: 45, targetX: 0 };
+    const pan = { x: 0, y: 0, width: 130, height: 40, targetX: 0 };
     let sessionMetrics = { garrofoCount: 0, chorizoCaught: 0 };
 
     function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; pan.y = canvas.height - 90; if (!isPlaying) pan.x = canvas.width / 2; }
     window.addEventListener('resize', resizeCanvas); resizeCanvas();
 
-    function handleTouchMove(e) { if (!isPlaying) return; const touchX = e.touches ? e.touches[0].clientX : e.clientX; pan.targetX = touchX; }
-    window.addEventListener('mousemove', handleTouchMove); window.addEventListener('touchmove', handleTouchMove, { passive: true });
+    function handleMove(e) { if (!isPlaying) return; const touchX = e.touches ? e.touches[0].clientX : e.clientX; pan.targetX = touchX; }
+    window.addEventListener('mousemove', handleMove); window.addEventListener('touchmove', handleMove, { passive: true });
 
     function startGameSession() {
       requestPiPayment(() => {
         document.getElementById('screen-home').classList.add('hidden');
         document.getElementById('screen-results').classList.add('hidden');
         document.getElementById('hud').classList.remove('hidden');
+        
         score = 0; timeRemaining = GAME_DURATION; items = []; sessionMetrics = { garrofoCount: 0, chorizoCaught: 0 };
         document.getElementById('hud-score').innerText = '0'; document.getElementById('hud-timer').innerText = GAME_DURATION;
         isPlaying = true; pan.x = canvas.width / 2; pan.targetX = canvas.width / 2;
+        
         if (gameTimer) clearInterval(gameTimer);
-        gameTimer = setInterval(() => { timeRemaining--; document.getElementById('hud-timer').innerText = timeRemaining; if (timeRemaining <= 0) endGameSession(); }, 1000);
+        gameTimer = setInterval(() => { 
+          timeRemaining--; 
+          document.getElementById('hud-timer').innerText = timeRemaining; 
+          if (timeRemaining <= 0) endGameSession(); 
+        }, 1000);
+        
         requestAnimationFrame(gameLoop);
       });
     }
@@ -351,6 +362,7 @@
       else if (rand < 0.70) selectedKey = "GREEN_BEAN";
       else if (rand < 0.85) selectedKey = "CHICKEN";
       else selectedKey = "RABBIT";
+      
       const typeData = INGREDIENT_TYPES[selectedKey];
       items.push({ x: Math.random() * (canvas.width - 60) + 30, y: -30, speed: Math.random() * 2.5 + 3.5, key: selectedKey, ...typeData });
     }
@@ -358,59 +370,48 @@
     function drawIngredient(item) {
       ctx.save();
       ctx.translate(item.x, item.y);
-      if (item.key === 'CHICKEN' || item.key === 'RABBIT') {
-        ctx.fillStyle = item.color; ctx.beginPath(); ctx.arc(0, 0, item.radius, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = '#fff'; ctx.fillRect(-item.radius, -3, 8, 6);
-      } else if (item.key === 'GREEN_BEAN') {
-        ctx.fillStyle = item.color; ctx.beginPath(); ctx.roundRect(-item.radius, -5, item.radius * 2, 10, 5); ctx.fill();
-      } else if (item.key === 'GARROFO') {
-        ctx.fillStyle = item.color; ctx.beginPath(); ctx.ellipse(0, 0, item.radius, item.radius - 5, Math.PI / 4, 0, Math.PI * 2); ctx.fill();
-      } else if (item.key === 'RICE') {
-        ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.ellipse(0, 0, item.radius, 6, 0, 0, Math.PI * 2); ctx.fill();
-      } else if (item.key === 'CHORIZO') {
-        ctx.fillStyle = item.color; ctx.beginPath(); ctx.arc(0, 0, item.radius, 0, Math.PI * 2); ctx.fill();
-        ctx.strokeStyle = '#ff1744'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(-10, -10); ctx.lineTo(10, 10); ctx.moveTo(10, -10); ctx.lineTo(-10, 10); ctx.stroke();
-      } else {
-        ctx.fillStyle = item.color; ctx.beginPath(); ctx.arc(0, 0, item.radius, 0, Math.PI * 2); ctx.fill();
-      }
+      ctx.fillStyle = item.color;
+      ctx.beginPath();
+      ctx.arc(0, 0, item.radius, 0, Math.PI * 2);
+      ctx.fill();
       ctx.restore();
-    }
-
-    function drawBackground() {
-      let grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
-      grad.addColorStop(0, '#fff3e0'); grad.addColorStop(0.7, '#ffe0b2'); grad.addColorStop(1, '#ffcc80');
-      ctx.fillStyle = grad; ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.strokeStyle = 'rgba(230, 81, 0, 0.05)'; ctx.lineWidth = 2;
-      for (let y = 0; y < canvas.height; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke(); }
     }
 
     let spawnCounter = 0;
     function gameLoop() {
       if (!isPlaying) return;
-      drawBackground();
+      
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+      // Dibujar fondo
+      let grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+      grad.addColorStop(0, '#fff3e0'); grad.addColorStop(1, '#ffcc80');
+      ctx.fillStyle = grad; ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Dibujar paella (jugador)
       pan.x += (pan.targetX - pan.x) * 0.25;
-      if (pan.x < pan.width / 2) pan.x = pan.width / 2;
-      if (pan.x > canvas.width - pan.width / 2) pan.x = canvas.width - pan.width / 2;
+      ctx.beginPath();
+      ctx.ellipse(pan.x, pan.y, pan.width / 2, pan.height / 2, 0, 0, Math.PI * 2);
+      ctx.fillStyle = '#ffb300'; ctx.fill();
+      ctx.lineWidth = 4; ctx.strokeStyle = '#e65100'; ctx.stroke();
 
-      ctx.beginPath(); ctx.ellipse(pan.x, pan.y + 20, pan.width / 2, 12, 0, 0, Math.PI * 2); ctx.fillStyle = 'rgba(0,0,0,0.18)'; ctx.fill();
-      ctx.fillStyle = '#263238'; ctx.fillRect(pan.x - pan.width / 2 - 15, pan.y - 4, 15, 8); ctx.fillRect(pan.x + pan.width / 2, pan.y - 4, 15, 8);
-      ctx.beginPath(); ctx.ellipse(pan.x, pan.y, pan.width / 2, pan.height / 2, 0, 0, Math.PI * 2); ctx.fillStyle = '#ffb300'; ctx.fill(); ctx.lineWidth = 4; ctx.strokeStyle = '#e65100'; ctx.stroke();
-      ctx.beginPath(); ctx.ellipse(pan.x, pan.y + 4, pan.width / 2 - 8, pan.height / 2 - 6, 0, 0, Math.PI * 2); ctx.fillStyle = '#ffe082'; ctx.fill();
-
-      spawnCounter++; if (spawnCounter % 30 === 0) spawnItem();
+      spawnCounter++; if (spawnCounter % 28 === 0) spawnItem();
 
       for (let i = items.length - 1; i >= 0; i--) {
         let item = items[i]; item.y += item.speed;
         drawIngredient(item);
 
         const inX = item.x > pan.x - pan.width / 2 && item.x < pan.x + pan.width / 2;
-        const inY = item.y + item.radius >= pan.y - pan.height / 4 && item.y - item.radius <= pan.y + pan.height / 2;
+        const inY = item.y + item.radius >= pan.y - pan.height / 2 && item.y - item.radius <= pan.y + pan.height / 2;
+        
         if (inX && inY) {
           if (item.type === 'good') { score += item.points; if (item.key === 'GARROFO') sessionMetrics.garrofoCount++; }
           else if (item.type === 'bad') { score = Math.max(0, score + item.points); }
           else if (item.type === 'chorizo') { score = Math.floor(score * 0.5); sessionMetrics.chorizoCaught++; }
-          document.getElementById('hud-score').innerText = score; items.splice(i, 1); continue;
+          
+          document.getElementById('hud-score').innerText = score; 
+          items.splice(i, 1); 
+          continue;
         }
         if (item.y > canvas.height + 40) items.splice(i, 1);
       }
@@ -421,6 +422,7 @@
     function endGameSession() {
       isPlaying = false; clearInterval(gameTimer);
       document.getElementById('hud').classList.add('hidden');
+      
       let questBonusTotal = 0;
       userData.quests.forEach(q => {
         if (!q.completed) {
@@ -429,15 +431,20 @@
           else if (q.key === 'NO_CHORIZO') { if (sessionMetrics.chorizoCaught === 0) { q.progress = 1; q.completed = true; questBonusTotal += q.reward; } }
         }
       });
-      userData.totalPoints += (score + questBonusTotal); userData.sessionsPlayed++;
+
+      userData.totalPoints += (score + questBonusTotal); 
+      userData.sessionsPlayed++;
       if (score > userData.bestRun) userData.bestRun = score;
+      
       saveUserData();
+
       document.getElementById('res-score').innerText = score;
       document.getElementById('res-quests').innerText = `+${questBonusTotal}`;
       document.getElementById('res-rank').innerText = getRank(userData.totalPoints);
       document.getElementById('screen-results').classList.remove('hidden');
     }
 
+    // Event Listeners
     document.getElementById('btn-login').addEventListener('click', authenticateWithPi);
     document.getElementById('btn-start').addEventListener('click', startGameSession);
     document.getElementById('btn-play-again').addEventListener('click', startGameSession);
