@@ -1,8 +1,3 @@
-/**
- * Servidor Backend en Node.js/Express para Paella Pi dApp.
- * Interactúa con la REST API v2 de Pi Network para Aprobar y Completar Pagos.
- */
-
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
@@ -11,15 +6,72 @@ const app = express();
 app.use(cors({ origin: '*' }));
 app.use(express.json());
 
-// Clave API de la App en Pi Developer Portal
-const PI_API_KEY = process.env.PI_API_KEY || "TU_PI_API_SECRET_KEY_AQUI";
+const PI_API_KEY = process.env.PI_API_KEY || "";
 const PI_API_URL = "https://api.minepi.com/v2";
 
 /**
- * Endpoint: /api/approve-payment
- * Llamado cuando el frontend activa 'onReadyForServerApproval'
+ * Helper to verify Pi access token by calling GET https://api.minepi.com/v2/me
+ * No Pi Network API key required for user validation via Bearer token.
  */
-app.post('/api/approve-payment', async (req, res) => {
+async function verifyPiAccessToken(accessToken) {
+  if (!accessToken) throw new Error("Access token missing.");
+
+  const response = await fetch(`${PI_API_URL}/me`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`
+    }
+  });
+
+  const userData = await response.json();
+
+  if (!response.ok) {
+    throw new Error(userData.message || "Failed to authenticate with Pi Network API.");
+  }
+
+  return userData;
+}
+
+/**
+ * Middleware to protect routes that require user authentication
+ */
+async function authenticateUserMiddleware(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: "Missing or invalid authorization header." });
+  }
+
+  const token = authHeader.split(' ')[1];
+  try {
+    const user = await verifyPiAccessToken(token);
+    req.piUser = user;
+    next();
+  } catch (error) {
+    return res.status(401).json({ error: error.message });
+  }
+}
+
+/**
+ * Endpoint: /api/verify-user
+ * Verifies access token from frontend and returns user data to establish session
+ */
+app.post('/api/verify-user', async (req, res) => {
+  const { accessToken } = req.body;
+
+  try {
+    const userData = await verifyPiAccessToken(accessToken);
+    console.log(`[PAELLA PI] User authenticated: @${userData.username} (${userData.uid})`);
+    return res.status(200).json({ success: true, user: userData });
+  } catch (error) {
+    console.error("User verification failed:", error.message);
+    return res.status(401).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * Endpoint: /api/approve-payment
+ */
+app.post('/api/approve-payment', authenticateUserMiddleware, async (req, res) => {
   const { paymentId } = req.body;
 
   if (!paymentId) {
@@ -42,7 +94,7 @@ app.post('/api/approve-payment', async (req, res) => {
       return res.status(response.status).json(data);
     }
 
-    console.log(`[PAELLA PI] Pago ${paymentId} APROBADO con éxito.`);
+    console.log(`[PAELLA PI] Pago ${paymentId} APROBADO para @${req.piUser.username}.`);
     return res.status(200).json({ success: true, payment: data });
 
   } catch (error) {
@@ -53,9 +105,8 @@ app.post('/api/approve-payment', async (req, res) => {
 
 /**
  * Endpoint: /api/complete-payment
- * Llamado cuando el frontend activa 'onReadyForServerCompletion' (después de la firma blockchain)
  */
-app.post('/api/complete-payment', async (req, res) => {
+app.post('/api/complete-payment', authenticateUserMiddleware, async (req, res) => {
   const { paymentId, txid } = req.body;
 
   if (!paymentId || !txid) {
@@ -79,7 +130,7 @@ app.post('/api/complete-payment', async (req, res) => {
       return res.status(response.status).json(data);
     }
 
-    console.log(`[PAELLA PI] Pago ${paymentId} COMPLETADO con TXID: ${txid}`);
+    console.log(`[PAELLA PI] Pago ${paymentId} COMPLETADO para @${req.piUser.username} con TXID: ${txid}`);
     return res.status(200).json({ success: true, payment: data });
 
   } catch (error) {
@@ -88,7 +139,6 @@ app.post('/api/complete-payment', async (req, res) => {
   }
 });
 
-// Inicialización del servidor
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`

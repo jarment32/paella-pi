@@ -311,7 +311,7 @@
         </button>
       </section>
 
-      <div class="status-msg" id="statusMsg">Listo para cocinar. Autentícate para guardar progreso.</div>
+      <div class="status-msg" id="statusMsg">Autenticando con Pi Network...</div>
     </main>
 
     <!-- PANTALLA DEL JUEGO / CANVAS -->
@@ -379,12 +379,13 @@
   </div>
 
   <script>
-    // ==========================================
-    // CONFIGURACIÓN & ESTADO GLOBAL
-    // ==========================================
-    const BACKEND_URL = ""; // En producción colocar dominio backend (ej. https://mi-backend.com)
+    const BACKEND_URL = "";
     
     let currentUser = null;
+    let piAccessToken = null;
+    let isAuthenticating = false;
+    let piInitialized = false;
+
     let userState = {
       points: 0,
       highScore: 0,
@@ -398,55 +399,78 @@
       ]
     };
 
-    // ==========================================
-    // PI NETWORK SDK INITIALIZATION & AUTH
-    // ==========================================
-    window.addEventListener('DOMContentLoaded', () => {
-      if (window.Pi) {
-        Pi.init({ version: "2.0", sandbox: true }); // TESTNET Sandbox
-        loginWithPi(true); // Intento de autologin
-      } else {
-        updateStatus("Pi SDK no detectado. Abre esta app en Pi Browser.");
-      }
-      renderQuests();
-    });
-
     function updateStatus(msg) {
       document.getElementById('statusMsg').innerText = msg;
     }
 
+    async function initPiSDK() {
+      if (piInitialized) return;
+      if (!window.Pi) {
+        throw new Error("Pi SDK no detectado. Abre esta app en Pi Browser.");
+      }
+      await Pi.init({ version: "2.0", sandbox: true });
+      piInitialized = true;
+    }
+
     function onIncompletePaymentFound(payment) {
       console.log("Pago incompleto detectado:", payment);
-      // Enviar al backend para completar pagos pendientes
       fetch(`${BACKEND_URL}/api/complete-payment`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${piAccessToken}`
+        },
         body: JSON.stringify({ paymentId: payment.identifier, txid: payment.transaction.txid })
       });
     }
 
-    function loginWithPi(silent = false) {
-      const scopes = ['username', 'payments'];
-      
-      Pi.authenticate(scopes, onIncompletePaymentFound)
-        .then(auth => {
-          currentUser = auth.user;
-          document.getElementById('userHandle').innerText = `@${currentUser.username}`;
-          document.getElementById('btnAuth').innerText = `✅ @${currentUser.username}`;
-          document.getElementById('btnAuth').disabled = true;
-          
-          loadUserData();
-          updateStatus(`Bienvenido, Chef @${currentUser.username}`);
-        })
-        .catch(err => {
-          console.error("Auth Error:", err);
-          if (!silent) updateStatus("Error de autenticación con Pi.");
+    async function loginWithPi() {
+      if (isAuthenticating) return;
+      isAuthenticating = true;
+      updateStatus("Inicializando Pi SDK...");
+
+      try {
+        await initPiSDK();
+        
+        updateStatus("Autenticando usuario con Pi...");
+        const scopes = ['username'];
+        const auth = await Pi.authenticate(scopes, onIncompletePaymentFound);
+
+        piAccessToken = auth.accessToken;
+
+        updateStatus("Verificando sesión en el servidor...");
+        const response = await fetch(`${BACKEND_URL}/api/verify-user`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ accessToken: piAccessToken })
         });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          throw new Error(data.error || "Error al verificar sesión en servidor.");
+        }
+
+        currentUser = data.user;
+        document.getElementById('userHandle').innerText = `@${currentUser.username}`;
+        document.getElementById('btnAuth').innerText = `✅ @${currentUser.username}`;
+        document.getElementById('btnAuth').disabled = true;
+
+        loadUserData();
+        updateStatus(`Bienvenido, Chef @${currentUser.username}`);
+      } catch (err) {
+        console.error("Auth Error:", err);
+        updateStatus(err.message || "Error durante la autenticación.");
+      } finally {
+        isAuthenticating = false;
+      }
     }
 
-    // ==========================================
-    // PERSISTENCIA LOCAL (localStorage por usuario)
-    // ==========================================
+    window.addEventListener('DOMContentLoaded', () => {
+      renderQuests();
+      loginWithPi();
+    });
+
     function loadUserData() {
       if (!currentUser) return;
       const key = `paella_pi_data_${currentUser.uid || currentUser.username}`;
@@ -471,7 +495,6 @@
       document.getElementById('userHighScore').innerText = userState.highScore;
       document.getElementById('userMatches').innerText = userState.matches;
       
-      // Cálculo de Rango
       let rank = "Rookie Chef";
       if (userState.points >= 1500) rank = "Paella Master 🏆";
       else if (userState.points >= 800) rank = "Rice Talent 🌾";
@@ -496,9 +519,6 @@
       `).join('');
     }
 
-    // ==========================================
-    // FLUJO DE PAGO CON PI (0.01 Test Pi)
-    // ==========================================
     function startMatchFlow() {
       if (!currentUser) {
         alert("Por favor, inicia sesión con Pi Network primero.");
@@ -519,7 +539,10 @@
           console.log("Aprobando pago en servidor:", paymentId);
           fetch(`${BACKEND_URL}/api/approve-payment`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${piAccessToken}`
+            },
             body: JSON.stringify({ paymentId })
           })
           .then(res => res.json())
@@ -531,7 +554,10 @@
           console.log("Completando pago en servidor:", paymentId, txid);
           fetch(`${BACKEND_URL}/api/complete-payment`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${piAccessToken}`
+            },
             body: JSON.stringify({ paymentId, txid })
           })
           .then(res => res.json())
@@ -556,9 +582,6 @@
       Pi.createPayment(paymentData, callbacks);
     }
 
-    // ==========================================
-    // LÓGICA DEL JUEGO (CANVAS 2D)
-    // ==========================================
     let canvas, ctx;
     let gameInterval, spawnInterval, timerInterval;
     let gameTime = 60;
@@ -597,13 +620,11 @@
       document.getElementById('scoreText').innerText = score;
       document.getElementById('timerText').innerText = gameTime;
 
-      // Listeners táctiles/ratón
       canvas.removeEventListener('mousemove', handleMove);
       canvas.removeEventListener('touchmove', handleMove);
       canvas.addEventListener('mousemove', handleMove);
       canvas.addEventListener('touchmove', handleMove, { passive: false });
 
-      // Loops del juego
       gameInterval = requestAnimationFrame(gameLoop);
       spawnInterval = setInterval(spawnItem, 700);
       timerInterval = setInterval(() => {
@@ -644,34 +665,29 @@
     function gameLoop() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Dibujar Paella (Sartén)
       ctx.fillStyle = "#333333";
       ctx.beginPath();
       ctx.roundRect(pan.x, pan.y, pan.width, pan.height, [0, 0, 12, 12]);
       ctx.fill();
       
-      // Asas de la paella
       ctx.fillStyle = "#e65100";
       ctx.fillRect(pan.x - 8, pan.y + 4, 8, 8);
       ctx.fillRect(pan.x + pan.width, pan.y + 4, 8, 8);
 
-      // Actualizar e items
       for (let i = items.length - 1; i >= 0; i--) {
         let it = items[i];
         it.y += it.speed;
 
-        // Render emoji
         ctx.font = "24px sans-serif";
         ctx.textAlign = "center";
         ctx.fillText(it.icon, it.x, it.y);
 
-        // Colisión con paella
         if (
           it.y >= pan.y - 10 && it.y <= pan.y + pan.height &&
           it.x >= pan.x && it.x <= pan.x + pan.width
         ) {
           if (it.isChorizo) {
-            score = Math.floor(score * 0.5); // PENALIZACIÓN 50%
+            score = Math.floor(score * 0.5);
             chorizoAvoidedInMatch = false;
           } else {
             score += it.pts;
@@ -684,7 +700,6 @@
           continue;
         }
 
-        // Eliminar al salir por abajo
         if (it.y > canvas.height + 30) {
           items.splice(i, 1);
         }
@@ -699,27 +714,22 @@
       clearInterval(spawnInterval);
       clearInterval(timerInterval);
 
-      // Actualización de estado global y Misiones
       userState.matches++;
       if (score > userState.highScore) userState.highScore = score;
       
-      // Evaluar Quests
       let questBonus = 0;
       
-      // Q1: Garrofós
       userState.quests[0].current += garrofosMatch;
       if (userState.quests[0].current >= userState.quests[0].target && !userState.quests[0].done) {
         userState.quests[0].done = true;
         questBonus += userState.quests[0].bonus;
       }
 
-      // Q2: 300 pts en 1 partida
       if (score >= userState.quests[1].target && !userState.quests[1].done) {
         userState.quests[1].done = true;
         questBonus += userState.quests[1].bonus;
       }
 
-      // Q3: Esquivar todo el chorizo
       if (chorizoAvoidedInMatch && !userState.quests[2].done) {
         userState.quests[2].current = 1;
         userState.quests[2].done = true;
@@ -731,7 +741,6 @@
 
       saveUserData();
 
-      // UI Resultados
       document.getElementById('resMatchScore').innerText = score;
       document.getElementById('resQuestBonus').innerText = `+${questBonus}`;
       
@@ -739,7 +748,6 @@
       document.getElementById('resultScreen').style.display = 'flex';
     }
 
-    // Nav Helpers
     function showHomeScreen() {
       document.getElementById('resultScreen').style.display = 'none';
       document.getElementById('gameScreen').style.display = 'none';
