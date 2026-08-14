@@ -69,10 +69,10 @@
       <div style="width: 100%; max-width: 380px;">
         <button id="btn-login" class="btn btn-login"><span>Sign in with Pi</span></button>
         <button id="btn-start" class="btn">
-          <span>Empezar Partida</span>
+          <span>Empezar Partida (Airdrop)</span>
           <span style="background: rgba(0,0,0,0.2); padding: 4px 10px; border-radius: 20px; font-size: 0.85rem;">0.01 Pi</span>
         </button>
-        <div class="notice">Pago de 0.01 Pi por sesión a la wallet GCBYE...AOIB2</div>
+        <div class="notice">Acceso a partida con derecho a Airdrop $PAELLA por 0.01 Pi</div>
       </div>
     </div>
 
@@ -105,7 +105,6 @@
   </div>
 
   <script>
-    const PAYEE_WALLET = "GCBYEUMHOBWEHFC3XYZ5F6AK4TDMMVQA73D2FESCODJRA45CB43AOIB2";
     const SESSION_COST = 0.01;
     const GAME_DURATION = 60;
 
@@ -139,8 +138,26 @@
     };
 
     let piUser = null;
+    let isPiInitialized = false;
 
-    function onIncompletePaymentFound(payment) { console.log("Incomplete payment found:", payment); }
+    async function completeIncompletePayment(payment) {
+      try {
+        await fetch('/api/payments/complete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ paymentId: payment.identifier, txid: payment.transaction.txid })
+        });
+      } catch (err) {
+        console.error("Error completing incomplete payment:", err);
+      }
+    }
+
+    function onIncompletePaymentFound(payment) {
+      console.log("Incomplete payment found:", payment);
+      if (payment && payment.transaction && payment.transaction.txid) {
+        completeIncompletePayment(payment);
+      }
+    }
 
     async function authenticateWithPi() {
       const userDisplay = document.getElementById('user-display');
@@ -151,8 +168,13 @@
           loadUserData();
           return;
         }
-        await Pi.init({ version: "2.0", sandbox: true });
-        const auth = await Pi.authenticate(['username'], onIncompletePaymentFound);
+        
+        if (!isPiInitialized) {
+          await Pi.init({ version: "2.0", sandbox: true });
+          isPiInitialized = true;
+        }
+
+        const auth = await Pi.authenticate(['username', 'payments'], onIncompletePaymentFound);
         const res = await fetch('/api/authenticate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -170,20 +192,70 @@
       }
     }
 
-    function requestPiPayment(onSuccess, onError) {
-      if (!window.Pi || !piUser) { setTimeout(onSuccess, 500); return; }
-      const paymentData = { amount: SESSION_COST, memo: "Pago de Partida Paella Pi", metadata: { type: "game_session" } };
-      const callbacks = {
-        onReadyForServerApproval: function(paymentId) {
-          fetch('/api/approve-payment', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ paymentId }) });
-        },
-        onReadyForServerCompletion: function(paymentId, txid) {
-          fetch('/api/complete-payment', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ paymentId, txid }) }).then(() => onSuccess());
-        },
-        onCancel: function() { alert("Pago cancelado."); if (onError) onError(); },
-        onError: function(error) { alert("Error de pago: " + error.message); if (onError) onError(); }
-      };
-      Pi.createPayment(paymentData, callbacks);
+    async function requestPiPayment(onSuccess, onError) {
+      if (!window.Pi) {
+        setTimeout(onSuccess, 500);
+        return;
+      }
+
+      try {
+        if (!isPiInitialized) {
+          await Pi.init({ version: "2.0", sandbox: true });
+          isPiInitialized = true;
+        }
+
+        if (!piUser) {
+          const auth = await Pi.authenticate(['username', 'payments'], onIncompletePaymentFound);
+          const res = await fetch('/api/authenticate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ accessToken: auth.accessToken })
+          });
+          const data = await res.json();
+          piUser = data.user;
+        }
+
+        const paymentData = {
+          amount: SESSION_COST,
+          memo: "Entrada a Partida + Derecho Airdrop $PAELLA",
+          metadata: { type: "game_entry_airdrop" }
+        };
+
+        const callbacks = {
+          onReadyForServerApproval: function(paymentId) {
+            fetch('/api/payments/approve', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ paymentId })
+            }).catch(err => console.error("Error approving payment:", err));
+          },
+          onReadyForServerCompletion: function(paymentId, txid) {
+            fetch('/api/payments/complete', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ paymentId, txid })
+            }).then(() => {
+              onSuccess();
+            }).catch(err => {
+              console.error("Error completing payment:", err);
+              if (onError) onError();
+            });
+          },
+          onCancel: function(paymentId) {
+            alert("Pago cancelado.");
+            if (onError) onError();
+          },
+          onError: function(error, payment) {
+            alert("Error de pago: " + error.message);
+            if (onError) onError();
+          }
+        };
+
+        Pi.createPayment(paymentData, callbacks);
+      } catch (err) {
+        console.error("Error creating payment:", err);
+        if (onError) onError();
+      }
     }
 
     function loadUserData() {
